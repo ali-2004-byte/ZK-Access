@@ -34,6 +34,9 @@ test('missing, extra, wrongly typed, and nested fields are rejected', () => {
   assert.throws(() => parsePrivateCredentialJson(JSON.stringify(withoutSalt)));
   assert.throws(() => parsePrivateCredentialJson(JSON.stringify({ ...credential, extra: 'x' })));
   assert.throws(() => parsePrivateCredentialJson(JSON.stringify({ ...credential, salt: 7 })));
+  assert.throws(() => parsePrivateCredentialJson(JSON.stringify({ ...credential, commitment: 123 })));
+  assert.throws(() => parsePrivateCredentialJson(JSON.stringify({ ...credential, issuedAt: 1794268800 })));
+  assert.throws(() => parsePrivateCredentialJson(JSON.stringify({ ...credential, credentialId: ['synthetic-1'] })));
   assert.throws(() => parsePrivateCredentialJson(JSON.stringify({ ...credential, salt: { value: '7' } })));
   assert.throws(() => parsePrivateCredentialJson(JSON.stringify([credential])));
 });

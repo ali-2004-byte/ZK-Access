@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { groth16 } from 'snarkjs';
+import { parseVerificationRequest, publicSignalsMatchChallenge } from '../src/app/verification-request.mjs';
 import { challengeHashFromNonce } from '../src/zk/challenge-hash.mjs';
 import { credentialCommitment, requestTag } from '../src/zk/poseidon.mjs';
 
@@ -25,7 +26,24 @@ async function check() {
 
   const { proof, publicSignals } = await groth16.fullProve(input, wasm, zkey, undefined, undefined, { singleThread: true });
   assert.deepEqual(publicSignals, [requestTag(challengeHash, commitment), commitment, input.cutoff, challengeHash]);
-  assert.equal(await groth16.verify(verificationKey, publicSignals, proof), true);
+  const parsedRequest = parseVerificationRequest(JSON.stringify({
+    version: '1',
+    challengeId: 'synthetic-challenge',
+    credential: {
+      credentialId: 'synthetic-credential',
+      commitment,
+      issuedAt: '1794268800',
+      expiresAt: '1802044800',
+      issuerName: 'ZK Access Demo Issuer',
+      signature: Buffer.alloc(64).toString('base64url'),
+    },
+    proof,
+    publicSignals,
+  }));
+  assert.equal(publicSignalsMatchChallenge(parsedRequest, {
+    credentialId: 'synthetic-credential', cutoff: input.cutoff, challengeHash,
+  }), true);
+  assert.equal(await groth16.verify(verificationKey, parsedRequest.publicSignals, parsedRequest.proof), true);
 
   const changedHash = [...publicSignals];
   changedHash[3] = (BigInt(challengeHash) + 1n).toString();

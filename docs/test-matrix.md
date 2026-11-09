@@ -35,6 +35,8 @@ Tests should also reject impossible dates, malformed encodings, out-of-range fie
 | CRED-11 signed-byte vector | The shared encoder emits the fixed `ZKACCESS-CRED-V1` binary vector with five four-byte big-endian byte lengths; the fixed Ed25519 signature verifies. Changing any signed field fails verification. |
 | CRED-12 credential JSON shape | Import rejects duplicate, missing, extra, or wrongly typed fields, unknown versions, files over 4 KB, invalid calendar dates, out-of-field salt, and malformed base64url signatures before proof generation. The public verifier request also needs a strict schema. |
 | CRED-13 private credential handoff | Issuer-admin browser downloads the private JSON; operator browser imports it; birth date and salt are absent from issuer storage, app verifier requests, ordinary logs, results, and reports. |
+| CRED-14 public request schema and signal binding | Raw JSON is at most 16 KB and rejects duplicate/missing/extra/wrongly typed keys and unknown versions. Signals are exactly requestTag, commitment, cutoff, challengeHash as decimal strings; each matches credential or stored challenge, and the tag is recomputed. Any `birthDate` or `salt` key is rejected and audited with values redacted. |
+| CRED-15 local key setup | Repeated setup preserves the issuer private key and service token, app public key matches that key, and none of these `.local/` files enter Git. |
 
 ## Challenge and replay (T2 and T-final)
 
@@ -51,8 +53,10 @@ Tests should also reject impossible dates, malformed encodings, out-of-range fie
 | REPLAY-09 unauthenticated, bad CSRF, malformed/oversized, or wrong-session-binding request | Reject before signature/proof verification; challenge remains unused. |
 | REPLAY-10 challenge database and audit inspection | Store only a nonce hash in the challenge row; never persist raw nonce in the challenge table, audit log, or user-facing output. |
 | REPLAY-11 challenge crosses UTC midnight | A valid proof uses the cutoff stored at challenge issuance, even if verification occurs on the next UTC day; the challenge still expires after five minutes. |
+| REPLAY-12 issuer status unavailable after valid signature | Return sanitized deny with `ISSUER_UNAVAILABLE` and HTTP 503, audit the reason code without the response body, and leave the challenge unused for a retry before expiry. |
+| REPLAY-13 issuer definitive revoked/unknown status | Return `CREDENTIAL_REVOKED` or `CREDENTIAL_UNKNOWN`, audit the reason, and consume the challenge with the decision transaction. |
 
-The challenge lifetime defaults to five minutes from the rules table. An attempt reaching issuer-signature or proof verification consumes its challenge whether it passes or fails, with the failure reason code in the internal audit log. Authentication, CSRF, malformed/oversized input, and wrong-session-binding rejections happen earlier and do not consume it. A failed attempt requires a new challenge; challenge issuance is rate limited.
+The challenge lifetime defaults to five minutes from the rules table. Signature failures, definitive issuer revoked/unknown statuses, and proof verification consume the challenge with the decision transaction. An issuer timeout, connection error, or unexpected response is the agreed exception: it fails closed but leaves the challenge retryable until expiry. Authentication, CSRF, malformed/oversized input, and wrong-session-binding rejections happen earlier and do not consume it. Challenge issuance is rate limited.
 
 ## Performance and security evidence (T3, T4, T-final)
 
