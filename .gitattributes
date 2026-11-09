@@ -1,0 +1,4 @@
+*.circom text eol=lf
+zk/artifacts/*.json text eol=lf
+zk/artifacts/*.zkey binary
+zk/artifacts/*.wasm binary

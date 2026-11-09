@@ -1,0 +1,20 @@
+{
+  "name": "zk-access",
+  "private": true,
+  "scripts": {
+    "start:app": "node src/app/server.mjs",
+    "start:issuer": "node src/issuer/server.mjs",
+    "zk:setup": "node scripts/zk-setup.mjs",
+    "zk:check": "node scripts/zk-check.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@iden3/js-crypto": "1.3.3",
+    "circomlib": "2.0.5",
+    "express": "^5.3.0",
+    "snarkjs": "0.7.6"
+  },
+  "overrides": {
+    "underscore": "1.13.8"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "circuitSha256": "31f5cdfb8c75a59b88a3f9b87878ae67915e952d11b6b53f969f751f286a74d1",
+  "compiler": "circom 2.2.3",
+  "snarkjs": "0.7.6",
+  "circomlib": "2.0.5",
+  "ceremony": "local single-party demo",
+  "artifacts": {
+    "age18_final.zkey": "0589ccc5f7dff6ade763a914482c70060ccd6644862c6c477f42c7749f54c6a6",
+    "age18.wasm": "f2bacfc1bbf26cf1d0e9559a60053daedd1b148ff49fad5273d82edfc0a17b1a",
+    "verification_key.json": "159464d449683f69ee9ca10a3c76475222e7bfdf9e0b5de3b04d81d8d8730279"
+  }
+}
