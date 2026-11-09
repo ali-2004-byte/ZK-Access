@@ -1,6 +1,7 @@
 import { poseidon } from '@iden3/js-crypto';
+import { BN254_FIELD_MODULUS } from './field.mjs';
 
-export const BN254_FIELD_MODULUS = 21888242871839275222246405745257275088548364400416034343698204186575808495617n;
+export { BN254_FIELD_MODULUS } from './field.mjs';
 
 function fieldElement(value, name) {
   let number;

@@ -1,6 +1,6 @@
 # Local development setup
 
-This repository currently has two Express entry points, the UTC age policy, issuer calendar-date encoding, server-side role rules, session lifetime rules, the Circom age circuit and Groth16 artifacts, and planning/test documents. The app and issuer processes expose health checks only. No credential issuance, authentication, browser proof-generation, or HTTP verification endpoint is active yet. The policy and proof modules are not yet wired to HTTP routes.
+This repository currently has two Express entry points, the UTC age policy, issuer calendar-date encoding, shared Ed25519 credential-signing bytes, server-side role rules, session lifetime rules, the Circom age circuit and Groth16 artifacts, and planning/test documents. The app and issuer processes expose health checks only. No credential issuance, authentication, browser proof-generation, or HTTP verification endpoint is active yet. The policy and proof modules are not yet wired to HTTP routes.
 
 ## Prerequisites
 
@@ -25,6 +25,6 @@ The services bind to loopback only. Set `APP_PORT` or `ISSUER_PORT` if those por
 - Member C: plain JavaScript browser workflow, dashboard, report view, and integration.
 - Member D: threat model, misuse tests, performance measurements, packaging, and clean install rehearsal.
 
-Existing policy code lives in `src/age-policy.mjs`, `src/issuer/birth-date.mjs`, `src/app/access-policy.mjs`, and `src/app/session-policy.mjs`. `npm test` checks age boundaries, issuer calendar validation and YYYYMMDD encoding, cross-role denials, session deadlines, and challenge issuance near session expiry.
+Existing policy code lives in `src/age-policy.mjs`, `src/issuer/birth-date.mjs`, `src/app/access-policy.mjs`, and `src/app/session-policy.mjs`. Shared signed-byte encoding is in `src/credential-signing.mjs`; the strict private file parser is in `src/credential-json.mjs` and documented in [the credential format](credential-format.md). `npm test` checks age boundaries, issuer calendar validation and YYYYMMDD encoding, private JSON rejection cases, fixed Ed25519 byte/signature vectors, cross-role denials, session deadlines, and challenge issuance near session expiry.
 
 Read the [implementation plan](implementation-plan.md), [work packages](work-packages.md), and [test matrix](test-matrix.md) before changing interfaces. The agreed role and output rules are in the implementation plan.

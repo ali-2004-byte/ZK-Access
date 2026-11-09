@@ -32,6 +32,9 @@ Tests should also reject impossible dates, malformed encodings, out-of-range fie
 | CRED-08 valid synthetic witness at cutoff | Groth16 proof verifies against the committed verification key; public signals match requestTag, commitment, cutoff, and challengeHash. |
 | CRED-09 birth date after cutoff or wrong salt | Witness/proof generation fails. |
 | CRED-10 mutate public cutoff or challengeHash after proving | Groth16 verification fails. |
+| CRED-11 signed-byte vector | The shared encoder emits the fixed `ZKACCESS-CRED-V1` binary vector with five four-byte big-endian byte lengths; the fixed Ed25519 signature verifies. Changing any signed field fails verification. |
+| CRED-12 credential JSON shape | Import rejects duplicate, missing, extra, or wrongly typed fields, unknown versions, files over 4 KB, invalid calendar dates, out-of-field salt, and malformed base64url signatures before proof generation. The public verifier request also needs a strict schema. |
+| CRED-13 private credential handoff | Issuer-admin browser downloads the private JSON; operator browser imports it; birth date and salt are absent from issuer storage, app verifier requests, ordinary logs, results, and reports. |
 
 ## Challenge and replay (T2 and T-final)
 
@@ -58,5 +61,5 @@ The challenge lifetime defaults to five minutes from the rules table. An attempt
 - Exercise safe errors, unauthorized access, restart recovery, sanitized export, and administrator rule changes.
 - Check every verifier response and admin/operator export against the agreed allowed-field list in the implementation plan. Exports include a fixed-enum reason code and proof size/timing measurements. Viewer results omit timings, and viewer export is denied with generic `AUTH_DENIED` and a redacted audit event.
 - Verify that admin cannot generate proofs, operator cannot configure rules, review audit logs, or manage users, and only a separately authenticated issuer admin can issue or revoke credentials.
-- Verify 90-day result/audit retention, challenge purge seven days after expiry, and issuer-record purge 90 days after credential expiry. A scheduled purge must log its own audit event; audit rows are never edited during ordinary operation.
+- Verify 90-day result retention from verification time, 90-day audit retention from event time, challenge purge seven days after expiry, and issuer-record purge 90 days after credential expiry. A scheduled purge must log its own audit event; audit rows are never edited during ordinary operation.
 - Verify that SQLite-backed sessions survive restart, rotate on login, expire after 30 minutes inactive or eight hours total, and are deleted on logout/expiry. Cookies are `httpOnly` and `sameSite=strict`.
