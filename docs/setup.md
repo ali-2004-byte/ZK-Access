@@ -1,6 +1,6 @@
 # Local development setup
 
-This repository currently has two Express entry points, the UTC age policy, issuer calendar-date encoding, shared Ed25519 credential-signing bytes, server-side role rules, session lifetime rules, the Circom age circuit and Groth16 artifacts, and planning/test documents. The app and issuer processes expose health checks only. No credential issuance, authentication, browser proof-generation, or HTTP verification endpoint is active yet. The policy and proof modules are not yet wired to HTTP routes.
+This repository currently has two Express entry points, the UTC age policy, issuer calendar-date encoding, shared Ed25519 credential-signing bytes, strict private/public request parsers, an injectable issuer-status client/router, server-side role rules, session lifetime rules, the Circom age circuit and Groth16 artifacts, and planning/test documents. The main app and issuer processes expose health checks only. No credential issuance, authentication, browser proof-generation, or HTTP verification endpoint is active yet. The policy and status modules are not yet wired to the main services and databases.
 
 ## Prerequisites
 

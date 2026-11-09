@@ -37,6 +37,7 @@ Tests should also reject impossible dates, malformed encodings, out-of-range fie
 | CRED-13 private credential handoff | Issuer-admin browser downloads the private JSON; operator browser imports it; birth date and salt are absent from issuer storage, app verifier requests, ordinary logs, results, and reports. |
 | CRED-14 public request schema and signal binding | Raw JSON is at most 16 KB and rejects duplicate/missing/extra/wrongly typed keys and unknown versions. Signals are exactly requestTag, commitment, cutoff, challengeHash as decimal strings; each matches credential or stored challenge, and the tag is recomputed. Any `birthDate` or `salt` key is rejected and audited with values redacted. |
 | CRED-15 local key setup | Repeated setup preserves the issuer private key and service token, app public key matches that key, and none of these `.local/` files enter Git. |
+| CRED-16 issuer status wire | One authenticated loopback POST sends only ID and commitment. Valid 200 responses contain exactly active/revoked/unknown; malformed, non-200, connection, and timeout cases fail closed as `ISSUER_UNAVAILABLE` after two seconds at most, without automatic retry or response-body logging. |
 
 ## Challenge and replay (T2 and T-final)
 
