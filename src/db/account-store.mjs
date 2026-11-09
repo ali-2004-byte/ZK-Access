@@ -29,6 +29,15 @@ export function initializeAccountSchema(db, service) {
     created_at_unix INTEGER NOT NULL,
     disabled INTEGER NOT NULL DEFAULT 0 CHECK (disabled IN (0, 1))
   ) STRICT`);
+  db.exec(`CREATE TABLE IF NOT EXISTS login_limits (
+    scope TEXT NOT NULL CHECK (scope IN ('ip', 'username')),
+    key_hash TEXT NOT NULL,
+    window_started_unix INTEGER NOT NULL,
+    failure_count INTEGER NOT NULL CHECK (failure_count >= 0),
+    lockout_stage INTEGER NOT NULL CHECK (lockout_stage >= 0),
+    lockout_until_unix INTEGER NOT NULL,
+    PRIMARY KEY (scope, key_hash)
+  ) STRICT`);
 }
 
 export function openAccountDatabase(service, root = projectRoot) {

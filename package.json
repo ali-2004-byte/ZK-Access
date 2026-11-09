@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "local:setup": "node scripts/local-setup.mjs",
+    "local:accounts": "node scripts/accounts-bootstrap.mjs",
     "start:app": "node src/app/server.mjs",
     "start:issuer": "node src/issuer/server.mjs",
     "zk:setup": "node scripts/zk-setup.mjs",

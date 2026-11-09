@@ -11,11 +11,12 @@ This repository currently has two Express entry points, the UTC age policy, issu
 
 1. Install locked dependencies with `npm ci`.
 2. Run `npm run local:setup` to generate the local issuer signing key, trusted app public key, and app-to-issuer service token in ignored `.local/` files. Rerunning preserves them.
-3. Run `npm test`.
-4. Run `npm run zk:setup` to verify the checked-in proof artifacts against the circuit. On a first build, this command downloads and checks the official Circom 2.2.3 binary, then runs a local single-party ceremony. Run `npm run zk:check` for a synthetic valid/invalid proof check.
-5. In one terminal, run `npm run start:app`.
-6. In another terminal, run `npm run start:issuer`.
-7. Check `http://127.0.0.1:3000/health` and `http://127.0.0.1:3001/health`.
+3. Run `npm run local:accounts` in an interactive terminal to choose separate app-admin and issuer-admin usernames and passwords. Password entry is masked and confirmed; both need at least 12 characters. Rerunning preserves existing accounts.
+4. Run `npm test`.
+5. Run `npm run zk:setup` to verify the checked-in proof artifacts against the circuit. On a first build, this command downloads and checks the official Circom 2.2.3 binary, then runs a local single-party ceremony. Run `npm run zk:check` for a synthetic valid/invalid proof check.
+6. In one terminal, run `npm run start:app`.
+7. In another terminal, run `npm run start:issuer`.
+8. Check `http://127.0.0.1:3000/health` and `http://127.0.0.1:3001/health`.
 
 The services bind to loopback only. Set `APP_PORT` or `ISSUER_PORT` if those ports are occupied. The issuer and app must remain separate processes; the issuer's signing key and administrator login will be added to the issuer process only.
 
