@@ -42,7 +42,7 @@ The proof must be connected to an issuer attestation and a one-time request. A c
 
 | Task | State | Completion check |
 | --- | --- | --- |
-| D1. Draft data-flow diagram and threat-model worksheet. | Ready | At least eight concrete threats identify trust boundary, mitigation, and verification evidence; team validates against final design. |
+| D1. Review and complete the draft data-flow diagram and threat-model worksheet. | Draft ready; instructor scope and team review pending | [Threat model](threat-model.md) lists eleven concrete threats with boundary, mitigation, and implementation/evidence status; team validates against final design and instructor scope. |
 | D2. Create the test matrix for T1-T4 and T-final. | Ready | Every case records input description, expected result, actual result, evidence, and pass/fail. |
 | D3. Add repeatable automated security and misuse tests. | Waiting on HTTP and database interfaces | Covers role-denial audit with generic `AUTH_DENIED`, unauthorized access, malformed/oversized input, repeated submission/replay, concurrent challenge use, early rejection without consumption, invalid signature/proof and definitive issuer denial with consumption, issuer outage without consumption, revocation, and recovery after restart. |
 | D4. Package local setup, sanitized fixtures, and clean-install rehearsal. | Waiting on stack details | A teammate can follow the guide from a clean checkout on an ordinary laptop. |
