@@ -16,7 +16,7 @@ Every field in the system belongs to one class. A field may only move toward a l
 
 ## Endpoints
 
-All bodies are JSON. Every endpoint except login checks the server-side session first, then the role permission, then CSRF for state-changing methods, then the body. Permission names are the actions in `src/app/access-policy.mjs`.
+All bodies are JSON. Every endpoint except login checks the server-side session first, then the role permission, then CSRF for state-changing methods, then the body. Permission names are the actions in `src/app/access-policy.mjs`. The tables below are declared in `src/app/endpoints.mjs` and `src/issuer/endpoints.mjs`; `src/http/authorization.mjs` enforces them. A role from the other service's session is denied. Declared routes without a handler yet return `NOT_IMPLEMENTED` after the permission check.
 
 ### App service (`127.0.0.1:3000`)
 
