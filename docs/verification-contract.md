@@ -12,13 +12,13 @@ The status call is exactly one `POST http://127.0.0.1:<issuer-port>/internal/cre
 
 | Outcome | Sanitized reason code | Challenge handling |
 | --- | --- | --- |
-| Signature failure | Safe invalid-signature code, to be fixed in the result schema | Consume with decision/audit transaction |
+| Signature failure | `SIGNATURE_INVALID` | Consume with decision/audit transaction |
 | Issuer says revoked | `CREDENTIAL_REVOKED` | Consume with decision/audit transaction |
 | Issuer says unknown | `CREDENTIAL_UNKNOWN` | Consume with decision/audit transaction |
 | Issuer timeout, connection error, or unexpected response | `ISSUER_UNAVAILABLE`; HTTP 503 | Leave unused so the operator can retry until the original five-minute expiry; record sanitized deny and audit event |
-| Proof verification reached, whether valid or invalid | Safe proof/decision code, to be fixed in the result schema | Consume with decision/audit transaction |
+| Proof verification reached, whether valid or invalid | `PROOF_VALID` or `PROOF_INVALID` | Consume with decision/audit transaction |
 
-Malformed/oversized requests, unauthenticated requests, bad CSRF, and wrong-session binding are rejected before signature verification without consuming the challenge. The status service and app verifier must never log the issuer response body or private fields. `src/app/issuer-status-client.mjs` and `src/issuer/status-router.mjs` implement and test this wire contract with an injected issuer-record lookup. They are not yet connected to persistent records or the main HTTP services. The remaining verifier reason-code enum still needs approval before full route integration.
+Malformed/oversized requests, unauthenticated requests, bad CSRF, and wrong-session binding are rejected before signature verification without consuming the challenge. The status service and app verifier must never log the issuer response body or private fields. `src/app/issuer-status-client.mjs` and `src/issuer/status-router.mjs` implement and test this wire contract with an injected issuer-record lookup. They are not yet connected to persistent records or the main HTTP services. The full reason-code enum, including `SIGNALS_MISMATCH` and `CREDENTIAL_EXPIRED`, is drafted in [the API contract](api-contract.md) and awaits B and C review.
 
 ## Local service credentials
 
