@@ -27,7 +27,7 @@ Sessions use the `zk_app_session` cookie in the app and `zk_issuer_session` in t
 | `POST /api/session/login` | none | `{ "username": string, "password": string }` |
 | `POST /api/session/logout` | any signed-in role | none |
 | `GET /api/session` | any signed-in role | none; returns `{ accountId, role, csrfToken }` |
-| `POST /api/challenges` | `request_challenge` | `{ "credentialId": string }` |
+| `POST /api/challenges` | `request_challenge` | `{ "credentialId": string }`; returns `{ challengeId, challengeHash, cutoff, expiresAt }`. At most 10 per account per minute (`RATE_LIMITED`); refused with `AUTH_REQUIRED` when the session would end before the challenge |
 | `POST /api/verifications` | `submit_proof` | the public request in [the verification contract](verification-contract.md), plus measurements below |
 | `GET /api/results` | `view_results` | none; query filters `decision`, `reasonCode`, `from`, `to` |
 | `GET /api/results/:resultId` | `view_results` | none |
@@ -53,6 +53,7 @@ The proof measurements are carried outside the signed and proven material becaus
 | `GET /api/users` | `manage_users` | none |
 | `POST /api/users` | `manage_users` | `{ "username": string, "password": string, "role": "issuer_admin" }` |
 | `PATCH /api/users/:accountId` | `manage_users` | `{ "disabled"?: boolean }`; an issuer admin cannot change their own account |
+| `GET /api/credentials` | `issue_credential` | none; returns issuance metadata (ID, times, issuing admin, status) without commitment or signature |
 | `POST /api/credentials` | `issue_credential` | `{ "version": "1", "birthDate": "YYYY-MM-DD", "salt": decimal string }`; returns the nine-field private credential JSON |
 | `POST /api/credentials/:credentialId/revoke` | `revoke_credential` | none |
 | `POST /internal/credential-status` | service token | as in [the verification contract](verification-contract.md) |
@@ -86,7 +87,7 @@ An error response is HTTP status plus exactly `{ "code": "<CODE>" }`. It has no 
 
 A request that passes authentication, CSRF, shape, and challenge lookup always produces a recorded result. `src/contracts/verification-result.mjs` builds the stored record and rejects any field outside this schema, so a commitment or signature passed by mistake fails at once instead of being stored.
 
-The verifier checks in this order: challenge state, public signals against the challenge and credential, Ed25519 signature, credential expiry, issuer status, Groth16 proof. The first failure decides the reason code.
+The verifier checks in this order: challenge state, public signals against the challenge and credential, Ed25519 signature, credential expiry, issuer status, Groth16 proof. Before the checks, the server claims the challenge by moving it from `issued` to a transient `verifying` state in one atomic update; a concurrent second submission fails that claim and is recorded as `CHALLENGE_REPLAYED`. `ISSUER_UNAVAILABLE` returns the challenge to `issued`, every other decided outcome moves it to `used`, and a claim left by a crash returns to `issued` on startup. The first failure decides the reason code.
 
 | Reason code | Decision | Challenge | HTTP |
 | --- | --- | --- | --- |
