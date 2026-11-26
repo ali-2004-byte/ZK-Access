@@ -26,7 +26,7 @@ export function mountFallbacks(app) {
       next(error);
       return;
     }
-    const code = error?.status === 413 ? 'PAYLOAD_TOO_LARGE' :
+    const code = error?.status === 413 ? 'PAYLOAD_TOO_LARGE' : error?.status === 415 ? 'UNSUPPORTED_MEDIA_TYPE' :
       error?.status === 400 ? 'MALFORMED_INPUT' : 'INTERNAL_ERROR';
     sendApiError(response, code);
   });

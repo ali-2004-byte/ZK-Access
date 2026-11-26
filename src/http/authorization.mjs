@@ -1,11 +1,21 @@
-// Server-side endpoint authorization that returns generic denials and audits each one.
+// Server-side endpoint authorization and CSRF checks that return generic denials and audit each one.
+import { timingSafeEqual } from 'node:crypto';
 import { createAuditEvent } from '../contracts/audit-event.mjs';
 import { sendApiError } from '../contracts/error-codes.mjs';
 
+const SAFE_METHODS = new Set(['GET', 'HEAD']);
 const SERVICE_ROLES = Object.freeze({
   app: new Set(['admin', 'operator', 'viewer']),
   issuer: new Set(['issuer_admin']),
 });
+
+// Constant-time comparison of the submitted CSRF header with the session's token.
+function csrfMatches(submitted, expected) {
+  if (typeof submitted !== 'string' || typeof expected !== 'string') return false;
+  const a = Buffer.from(submitted);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
 
 // Build a guard factory for one service; roles come only from the resolved server-side session.
 export function createAuthorizer({ service, mayUse, resolveSession, audit, now = Date.now }) {
@@ -18,9 +28,8 @@ export function createAuthorizer({ service, mayUse, resolveSession, audit, now =
   async function deny(response, code, session, context) {
     const known = session && SERVICE_ROLES[service].has(session.role);
     const actor = known ? { kind: 'account', accountId: session.accountId, role: session.role } : { kind: 'anonymous' };
-    await audit(createAuditEvent({
-      service, type: 'authz.denied', actor, outcome: 'denied', code, context, occurredAt: now(),
-    }));
+    const type = code === 'CSRF_INVALID' ? 'csrf.rejected' : 'authz.denied';
+    await audit(createAuditEvent({ service, type, actor, outcome: 'denied', code, context, occurredAt: now() }));
     sendApiError(response, code);
   }
 
@@ -37,6 +46,10 @@ export function createAuthorizer({ service, mayUse, resolveSession, audit, now =
         (action === null || mayUse(session.role, action));
       if (!allowed) {
         await deny(response, 'AUTH_DENIED', session, context);
+        return;
+      }
+      if (!SAFE_METHODS.has(request.method) && !csrfMatches(request.get('x-csrf-token'), session.csrfToken)) {
+        await deny(response, 'CSRF_INVALID', session, context);
         return;
       }
       request.auth = Object.freeze({ accountId: session.accountId, role: session.role });

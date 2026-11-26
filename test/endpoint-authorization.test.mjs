@@ -28,6 +28,9 @@ const ALLOWED_ISSUER_ROLES = {
   currentSession: ['issuer_admin'],
   issueCredential: ['issuer_admin'],
   revokeCredential: ['issuer_admin'],
+  listUsers: ['issuer_admin'],
+  createUser: ['issuer_admin'],
+  updateUser: ['issuer_admin'],
 };
 const ALL_ROLES = ['admin', 'operator', 'viewer', 'issuer_admin'];
 
@@ -54,7 +57,7 @@ const resultStore = {
 // Test-only resolver: the role comes from a header standing in for a server-side session row.
 function headerSession(request) {
   const role = request.get('x-test-role');
-  return role ? { accountId: `${role}-1`.replace('_', '-'), role } : null;
+  return role ? { accountId: `${role}-1`.replace('_', '-'), role, csrfToken: 'test-csrf' } : null;
 }
 
 // Start a service on an ephemeral loopback port, run the callback, then close it.
@@ -72,7 +75,7 @@ async function withServer(app, run) {
 function call(origin, endpoint, role) {
   const path = endpoint.path.replace(':resultId', 'result-1').replace(':accountId', 'viewer-1')
     .replace(':credentialId', 'synthetic-1');
-  const headers = role ? { 'x-test-role': role } : {};
+  const headers = role ? { 'x-test-role': role, 'x-csrf-token': 'test-csrf' } : {};
   return fetch(`${origin}${path}`, { method: endpoint.method, headers });
 }
 
