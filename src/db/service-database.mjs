@@ -3,7 +3,9 @@ import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { accountDatabasePath, initializeAccountSchema } from './account-store.mjs';
+import { initializeAppRecordSchema } from './app-records.mjs';
 import { initializeAuditSchema } from './audit-store.mjs';
+import { initializeIssuerRecordSchema } from './issuer-records.mjs';
 import { initializeSessionSchema } from './session-store.mjs';
 
 // Create all tables for the service on an open database handle.
@@ -11,6 +13,8 @@ export function initializeServiceSchema(db, service) {
   initializeAccountSchema(db, service);
   initializeSessionSchema(db);
   initializeAuditSchema(db);
+  if (service === 'app') initializeAppRecordSchema(db);
+  else initializeIssuerRecordSchema(db);
 }
 
 // Open the service's file under .local/, or an in-memory database when file is ':memory:'.
