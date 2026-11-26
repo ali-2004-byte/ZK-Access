@@ -52,4 +52,11 @@ if (!/^[A-Za-z0-9_-]{43}$/.test(issuerToken)) throw new Error('Issuer service to
 if (appToken === null) await writeNew(appTokenPath, issuerToken);
 else if (appToken !== issuerToken) throw new Error('App and issuer service tokens differ');
 
+for (const dir of [appDir, issuerDir]) {
+  const keyPath = path.join(dir, 'audit-identifier-key');
+  const key = await readOptional(keyPath);
+  if (key === null) await writeNew(keyPath, randomBytes(32).toString('base64url'));
+  else if (!/^[A-Za-z0-9_-]{43}$/.test(key)) throw new Error(`${keyPath} is malformed`);
+}
+
 console.log('Local issuer key and app/issuer service credentials are ready. Existing secrets were preserved.');
