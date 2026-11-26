@@ -1,28 +1,19 @@
 // Login, cookie session, CSRF, lockout, user management, and audit-log tests over real HTTP.
 import assert from 'node:assert/strict';
 import { createHash, randomBytes } from 'node:crypto';
-import { once } from 'node:events';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { createApp } from '../src/app/server.mjs';
 import { SESSION_ABSOLUTE_MS, SESSION_IDLE_MS } from '../src/app/session-policy.mjs';
-import { hashPassword } from '../src/auth/password.mjs';
 import { openServiceDatabase } from '../src/db/service-database.mjs';
 import { createIssuer } from '../src/issuer/server.mjs';
+import { addAccount, browser, withServer } from './http-helpers.mjs';
 
 const identifierKey = randomBytes(32);
 const ADMIN_PASSWORD = 'synthetic-admin-password';
 const OPERATOR_PASSWORD = 'synthetic-operator-password';
-const records = {};
-
-// Insert an account with a cached scrypt record so each password is hashed once per run.
-async function addAccount(db, id, username, password, role) {
-  records[password] ??= await hashPassword(password);
-  db.prepare('INSERT INTO accounts (id, username_normalized, password_record, role, created_at_unix) VALUES (?, ?, ?, ?, ?)')
-    .run(id, username, records[password], role, 1);
-}
 
 // Fresh in-memory app database with one admin and one operator.
 async function seededAppDb(file = ':memory:') {
@@ -30,44 +21,6 @@ async function seededAppDb(file = ':memory:') {
   await addAccount(db, 'admin-1', 'admin1', ADMIN_PASSWORD, 'admin');
   await addAccount(db, 'operator-1', 'operator1', OPERATOR_PASSWORD, 'operator');
   return db;
-}
-
-// Start a service on an ephemeral loopback port, run the callback, then close it.
-async function withServer(app, run) {
-  const server = app.listen(0, '127.0.0.1');
-  await once(server, 'listening');
-  try {
-    await run(`http://127.0.0.1:${server.address().port}`);
-  } finally {
-    server.closeAllConnections();
-    await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
-  }
-}
-
-// Minimal browser stand-in that keeps one cookie and the last CSRF token.
-function browser(origin) {
-  const client = { cookie: null, csrfToken: null, setCookie: null };
-  client.request = async (method, route, body, { csrf = true, contentType = 'application/json' } = {}) => {
-    const headers = {};
-    if (client.cookie) headers.cookie = client.cookie;
-    if (csrf && client.csrfToken) headers['x-csrf-token'] = client.csrfToken;
-    if (body !== undefined) headers['content-type'] = contentType;
-    const response = await fetch(`${origin}${route}`, {
-      method, headers, body: body === undefined ? undefined : typeof body === 'string' ? body : JSON.stringify(body),
-    });
-    const setCookie = response.headers.get('set-cookie');
-    if (setCookie) {
-      client.setCookie = setCookie;
-      const pair = setCookie.split(';', 1)[0];
-      client.cookie = pair.endsWith('=') ? null : pair;
-    }
-    const text = await response.text();
-    const json = text ? JSON.parse(text) : null;
-    if (json?.csrfToken) client.csrfToken = json.csrfToken;
-    return { status: response.status, json, headers: response.headers };
-  };
-  client.login = (username, password) => client.request('POST', '/api/session/login', { username, password });
-  return client;
 }
 
 test('login sets a hardened cookie, stores only its hash, and returns a CSRF token', async () => {

@@ -3,6 +3,7 @@ export const ISSUER_ENDPOINTS = Object.freeze([
   { name: 'login', method: 'POST', path: '/api/session/login', public: true },
   { name: 'logout', method: 'POST', path: '/api/session/logout', action: null },
   { name: 'currentSession', method: 'GET', path: '/api/session', action: null },
+  { name: 'listCredentials', method: 'GET', path: '/api/credentials', action: 'issue_credential' },
   { name: 'issueCredential', method: 'POST', path: '/api/credentials', action: 'issue_credential' },
   { name: 'listUsers', method: 'GET', path: '/api/users', action: 'manage_users' },
   { name: 'createUser', method: 'POST', path: '/api/users', action: 'manage_users' },

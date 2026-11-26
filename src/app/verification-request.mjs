@@ -19,6 +19,12 @@ function exactKeys(value, keys) {
     keys.every((key) => Object.hasOwn(value, key));
 }
 
+// The browser may add its own proof-generation time; it is a measurement, never trusted for the decision.
+function validClientMeasurements(value) {
+  return exactKeys(value, ['proofGenerationMs']) && Number.isSafeInteger(value.proofGenerationMs) &&
+    value.proofGenerationMs >= 0 && value.proofGenerationMs <= 600_000;
+}
+
 function containsPrivateKey(value) {
   if (!isObject(value) && !Array.isArray(value)) return false;
   if (Array.isArray(value)) return value.some(containsPrivateKey);
@@ -45,7 +51,9 @@ function validProof(proof) {
 export function parseVerificationRequest(text) {
   const request = parseStrictJson(text, MAX_BODY_BYTES);
   if (containsPrivateKey(request)) throw new TypeError('PRIVATE_FIELD_SUBMITTED');
-  if (!exactKeys(request, TOP_KEYS) || request.version !== '1' ||
+  const hasMeasurements = isObject(request) && Object.hasOwn(request, 'clientMeasurements');
+  if (!exactKeys(request, hasMeasurements ? [...TOP_KEYS, 'clientMeasurements'] : TOP_KEYS) ||
+      (hasMeasurements && !validClientMeasurements(request.clientMeasurements)) || request.version !== '1' ||
       typeof request.challengeId !== 'string' || request.challengeId.length === 0) {
     throw new TypeError('Invalid verification request');
   }

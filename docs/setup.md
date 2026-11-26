@@ -1,6 +1,6 @@
 # Local development setup
 
-This repository currently has two Express entry points, the UTC age policy, issuer calendar-date encoding, shared Ed25519 credential-signing bytes, strict private/public request parsers, an injectable issuer-status client/router, server-side role rules, session lifetime rules, the Circom age circuit and Groth16 artifacts, and planning/test documents. Both processes open their own SQLite file under `.local/`, support login, cookie sessions, CSRF-protected writes, user management, and an append-only audit log. Credential issuance, browser proof generation, and HTTP verification are not active yet.
+This repository currently has two Express entry points, the UTC age policy, issuer calendar-date encoding, shared Ed25519 credential-signing bytes, strict private/public request parsers, an injectable issuer-status client/router, server-side role rules, session lifetime rules, the Circom age circuit and Groth16 artifacts, and planning/test documents. Both processes open their own SQLite file under `.local/`, support login, cookie sessions, CSRF-protected writes, user management, and an append-only audit log. The issuer issues and revokes signed credentials and serves the authenticated status route; the app issues challenges and verifies submitted proofs. Browser screens and proof generation are not built yet.
 
 ## Prerequisites
 

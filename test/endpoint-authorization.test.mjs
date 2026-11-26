@@ -26,6 +26,7 @@ const ALLOWED_APP_ROLES = {
 const ALLOWED_ISSUER_ROLES = {
   logout: ['issuer_admin'],
   currentSession: ['issuer_admin'],
+  listCredentials: ['issuer_admin'],
   issueCredential: ['issuer_admin'],
   revokeCredential: ['issuer_admin'],
   listUsers: ['issuer_admin'],

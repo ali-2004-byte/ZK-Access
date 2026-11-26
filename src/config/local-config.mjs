@@ -1,4 +1,5 @@
 // Loads each service's ignored .local/ secrets written by `npm run local:setup`.
+import { createPrivateKey, createPublicKey } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,9 +24,28 @@ function readKey(file) {
   return Buffer.from(text, 'base64url');
 }
 
-// Secrets the given service needs at startup.
+// Read the app-to-issuer service token.
+function readToken(file) {
+  const text = readSetupFile(file);
+  if (!KEY_TEXT.test(text)) throw new Error(`${file} is malformed; rerun npm run local:setup`);
+  return text;
+}
+
+// Secrets the given service needs at startup; the app never reads the issuer's private key.
 export function loadServiceConfig(service, root = projectRoot) {
   if (service !== 'app' && service !== 'issuer') throw new TypeError('Unknown service');
   const dir = path.join(root, '.local', service);
-  return { identifierKey: readKey(path.join(dir, 'audit-identifier-key')) };
+  const identifierKey = readKey(path.join(dir, 'audit-identifier-key'));
+  if (service === 'app') {
+    return {
+      identifierKey,
+      trustedIssuerKey: createPublicKey(readSetupFile(path.join(dir, 'trusted-issuer-public.pem'))),
+      serviceToken: readToken(path.join(dir, 'issuer-service-token')),
+    };
+  }
+  return {
+    identifierKey,
+    signingKey: createPrivateKey(readSetupFile(path.join(dir, 'signing-private.pem'))),
+    serviceToken: readToken(path.join(dir, 'service-token')),
+  };
 }
