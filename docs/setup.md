@@ -1,6 +1,6 @@
 # Local development setup
 
-This repository currently has two Express entry points, the UTC age policy, issuer calendar-date encoding, shared Ed25519 credential-signing bytes, strict private/public request parsers, an injectable issuer-status client/router, server-side role rules, session lifetime rules, the Circom age circuit and Groth16 artifacts, and planning/test documents. The main app and issuer processes expose health checks only. No credential issuance, authentication, browser proof-generation, or HTTP verification endpoint is active yet. The policy and status modules are not yet wired to the main services and databases.
+This repository currently has two Express entry points, the UTC age policy, issuer calendar-date encoding, shared Ed25519 credential-signing bytes, strict private/public request parsers, an injectable issuer-status client/router, server-side role rules, session lifetime rules, the Circom age circuit and Groth16 artifacts, and planning/test documents. Both processes open their own SQLite file under `.local/`, support login, cookie sessions, CSRF-protected writes, user management, and an append-only audit log. Credential issuance, browser proof generation, and HTTP verification are not active yet.
 
 ## Prerequisites
 
@@ -10,7 +10,7 @@ This repository currently has two Express entry points, the UTC age policy, issu
 ## Run
 
 1. Install locked dependencies with `npm ci`.
-2. Run `npm run local:setup` to generate the local issuer signing key, trusted app public key, and app-to-issuer service token in ignored `.local/` files. Rerunning preserves them.
+2. Run `npm run local:setup` to generate the local issuer signing key, trusted app public key, app-to-issuer service token, and per-service audit identifier keys in ignored `.local/` files. Rerunning preserves them.
 3. Run `npm run local:accounts` in an interactive terminal to choose separate app-admin and issuer-admin usernames and passwords. Password entry is masked and confirmed; both need at least 12 characters. Rerunning preserves existing accounts.
 4. Run `npm test`.
 5. Run `npm run zk:setup` to verify the checked-in proof artifacts against the circuit. On a first build, this command downloads and checks the official Circom 2.2.3 binary, then runs a local single-party ceremony. Run `npm run zk:check` for a synthetic valid/invalid proof check.

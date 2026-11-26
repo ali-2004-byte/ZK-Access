@@ -5,7 +5,7 @@ const APP_ACTIONS = Object.freeze({
 });
 
 const ISSUER_ACTIONS = Object.freeze({
-  issuer_admin: new Set(['issue_credential', 'revoke_credential']),
+  issuer_admin: new Set(['issue_credential', 'revoke_credential', 'manage_users']),
 });
 
 /** Use only a role loaded from a server-side session, never a client-supplied role. */

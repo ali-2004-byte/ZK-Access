@@ -18,6 +18,8 @@ Every field in the system belongs to one class. A field may only move toward a l
 
 All bodies are JSON. Every endpoint except login checks the server-side session first, then the role permission, then CSRF for state-changing methods, then the body. Permission names are the actions in `src/app/access-policy.mjs`. The tables below are declared in `src/app/endpoints.mjs` and `src/issuer/endpoints.mjs`; `src/http/authorization.mjs` enforces them. A role from the other service's session is denied. Declared routes without a handler yet return `NOT_IMPLEMENTED` after the permission check.
 
+Sessions use the `zk_app_session` cookie in the app and `zk_issuer_session` in the issuer; both services run on 127.0.0.1, where cookies are shared across ports, so the names must differ. The cookie is `HttpOnly`, `SameSite=Strict`, and `Path=/`; it has no `Secure` flag because the demo serves plain HTTP on loopback. The value is 32 random bytes in base64url; the database stores only its SHA-256 hash. Login and `GET /api/session` return a per-session `csrfToken`, which the browser sends as the `X-CSRF-Token` header on every `POST`, `PUT`, `PATCH`, or `DELETE` except login. Login itself accepts only `application/json`, which an HTML form cannot send cross-site.
+
 ### App service (`127.0.0.1:3000`)
 
 | Method and path | Permission | Request body |
@@ -35,7 +37,7 @@ All bodies are JSON. Every endpoint except login checks the server-side session 
 | `GET /api/audit-events` | `review_audit` | none; query `type`, `from`, `to` |
 | `GET /api/users` | `manage_users` | none |
 | `POST /api/users` | `manage_users` | `{ "username": string, "password": string, "role": "operator" \| "viewer" }` |
-| `PATCH /api/users/:accountId` | `manage_users` | `{ "role"?: string, "disabled"?: boolean }` |
+| `PATCH /api/users/:accountId` | `manage_users` | `{ "role"?: "operator" \| "viewer", "disabled"?: boolean }`; admins cannot change admin accounts or themselves |
 
 High-impact rule changes (a lower minimum age or a longer challenge lifetime) without `"confirm": true` return `CONFIRMATION_REQUIRED` and change nothing.
 
@@ -48,6 +50,9 @@ The proof measurements are carried outside the signed and proven material becaus
 | `POST /api/session/login` | none | `{ "username": string, "password": string }` |
 | `POST /api/session/logout` | any signed-in issuer account | none |
 | `GET /api/session` | any signed-in issuer account | none |
+| `GET /api/users` | `manage_users` | none |
+| `POST /api/users` | `manage_users` | `{ "username": string, "password": string, "role": "issuer_admin" }` |
+| `PATCH /api/users/:accountId` | `manage_users` | `{ "disabled"?: boolean }`; an issuer admin cannot change their own account |
 | `POST /api/credentials` | `issue_credential` | `{ "version": "1", "birthDate": "YYYY-MM-DD", "salt": decimal string }`; returns the nine-field private credential JSON |
 | `POST /api/credentials/:credentialId/revoke` | `revoke_credential` | none |
 | `POST /internal/credential-status` | service token | as in [the verification contract](verification-contract.md) |
