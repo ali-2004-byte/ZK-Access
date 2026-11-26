@@ -8,14 +8,24 @@ import { createAuthorizer, noSession, writeAuditToStdout } from '../http/authori
 import { mountEndpoints, mountFallbacks } from '../http/endpoints.mjs';
 import { listenLocal } from '../listen-local.mjs';
 import { mayUseAppAction } from './access-policy.mjs';
+import { createAppRecords } from '../db/app-records.mjs';
 import { createAuditHandlers } from './audit-handlers.mjs';
+import { createChallengeHandlers } from './challenge-handlers.mjs';
 import { APP_ENDPOINTS } from './endpoints.mjs';
+import { checkIssuerStatus } from './issuer-status-client.mjs';
+import { ENGINE_VERSION, verifyAgeProof } from './proof-engine.mjs';
 import { createResultHandlers } from './result-handlers.mjs';
+import { createVerificationHandlers } from './verification-handlers.mjs';
 
-// Build the app; with a database it gets sessions, login, users, and audit, and every seam stays injectable.
+// Build the app; with a database it gets sessions, challenges, and verification, and every seam stays injectable.
 export function createApp({
   db = null,
   identifierKey = null,
+  trustedIssuerKey = null,
+  serviceToken = null,
+  issuerOrigin = 'http://127.0.0.1:3001',
+  checkStatus,
+  verifyProof = verifyAgeProof,
   resolveSession,
   audit,
   resultStore = null,
@@ -27,7 +37,19 @@ export function createApp({
     const accounts = createAccountServices({ service: 'app', db, identifierKey, audit, now });
     audit = accounts.audit;
     resolveSession ??= accounts.resolveSession;
-    defaults = { ...accounts.handlers, ...createAuditHandlers({ auditStore: accounts.auditStore, audit, now }) };
+    const records = createAppRecords(db);
+    records.recoverClaims();
+    resultStore ??= records.resultStore;
+    const shared = { db, records, sessions: accounts.sessions, audit, now };
+    checkStatus ??= (credential) => checkIssuerStatus(credential, { serviceToken, issuerOrigin });
+    defaults = {
+      ...accounts.handlers,
+      ...createAuditHandlers({ auditStore: accounts.auditStore, audit, now }),
+      ...createChallengeHandlers(shared),
+      ...(trustedIssuerKey ? createVerificationHandlers({
+        ...shared, trustedIssuerKey, checkStatus, verifyProof, engineVersion: ENGINE_VERSION,
+      }) : {}),
+    };
   }
   resolveSession ??= noSession;
   audit ??= writeAuditToStdout;
@@ -45,8 +67,9 @@ export function createApp({
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { identifierKey } = loadServiceConfig('app');
-  listenLocal(createApp({ db: openServiceDatabase('app'), identifierKey }), {
+  const config = loadServiceConfig('app');
+  const issuerOrigin = `http://127.0.0.1:${process.env.ISSUER_PORT ?? 3001}`;
+  listenLocal(createApp({ db: openServiceDatabase('app'), ...config, issuerOrigin }), {
     portVariable: 'APP_PORT',
     defaultPort: 3000,
     serviceName: 'ZK Access app',
