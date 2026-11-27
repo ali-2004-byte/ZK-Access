@@ -71,6 +71,19 @@ function rowToResult(row) {
   };
 }
 
+// Build a filtered, bounded result query with every value bound as a parameter.
+function filteredResults(db, { decision, reasonCode, from, to } = {}, limit = 500) {
+  const clauses = [];
+  const params = [];
+  if (decision !== undefined) { clauses.push('decision = ?'); params.push(decision); }
+  if (reasonCode !== undefined) { clauses.push('reason_code = ?'); params.push(reasonCode); }
+  if (from !== undefined) { clauses.push('verified_at_ms >= ?'); params.push(from); }
+  if (to !== undefined) { clauses.push('verified_at_ms <= ?'); params.push(to); }
+  const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+  return db.prepare(`SELECT ${RESULT_COLUMNS} FROM verification_results ${where}
+    ORDER BY verified_at_ms DESC, rowid DESC LIMIT ?`).all(...params, limit).map(rowToResult);
+}
+
 // Prepared statements for the challenge lifecycle and result history.
 export function createAppRecords(db) {
   const rule = db.prepare('SELECT name, version, challenge_lifetime_seconds FROM rules ORDER BY name LIMIT 1');
@@ -84,8 +97,6 @@ export function createAppRecords(db) {
   const recover = db.prepare("UPDATE challenges SET state = 'issued' WHERE state = 'verifying'");
   const insertResult = db.prepare(`INSERT INTO verification_results (${RESULT_COLUMNS})
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
-  const listResults = db.prepare(`SELECT ${RESULT_COLUMNS} FROM verification_results
-    ORDER BY verified_at_ms DESC, rowid DESC LIMIT 500`);
   const getResult = db.prepare(`SELECT ${RESULT_COLUMNS} FROM verification_results WHERE result_id = ?`);
 
   return {
@@ -120,7 +131,7 @@ export function createAppRecords(db) {
         result.actorAccountId, result.engineVersion);
     },
     resultStore: {
-      list: () => listResults.all().map(rowToResult),
+      list: (filters, limit) => filteredResults(db, filters, limit),
       get: (resultId) => {
         const row = getResult.get(resultId);
         return row ? rowToResult(row) : null;

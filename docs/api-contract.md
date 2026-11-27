@@ -29,12 +29,12 @@ Sessions use the `zk_app_session` cookie in the app and `zk_issuer_session` in t
 | `GET /api/session` | any signed-in role | none; returns `{ accountId, role, csrfToken }` |
 | `POST /api/challenges` | `request_challenge` | `{ "credentialId": string }`; returns `{ challengeId, challengeHash, cutoff, expiresAt }`. At most 10 per account per minute (`RATE_LIMITED`); refused with `AUTH_REQUIRED` when the session would end before the challenge |
 | `POST /api/verifications` | `submit_proof` | the public request in [the verification contract](verification-contract.md), plus measurements below |
-| `GET /api/results` | `view_results` | none; query filters `decision`, `reasonCode`, `from`, `to` |
+| `GET /api/results` | `view_results` | none; query filters `decision`, `reasonCode`, `from`, `to` (Unix ms, inclusive); newest first, at most 500 |
 | `GET /api/results/:resultId` | `view_results` | none |
-| `GET /api/reports/export` | `export_report` | none; query `format=csv` or `format=json`, plus the result filters |
+| `GET /api/reports/export` | `export_report` | none; query `format=csv` or `format=json` (default), plus the result filters; at most 10,000 rows |
 | `GET /api/rules` | `configure_rules` | none |
 | `PUT /api/rules` | `configure_rules` | `{ "minimumAge": integer, "challengeLifetimeSeconds": integer, "confirm": boolean }` |
-| `GET /api/audit-events` | `review_audit` | none; query `type`, `from`, `to` |
+| `GET /api/audit-events` | `review_audit` | none; query `type`, `from`, `to`, `limit` (1–500, default 100) |
 | `GET /api/users` | `manage_users` | none |
 | `POST /api/users` | `manage_users` | `{ "username": string, "password": string, "role": "operator" \| "viewer" }` |
 | `PATCH /api/users/:accountId` | `manage_users` | `{ "role"?: "operator" \| "viewer", "disabled"?: boolean }`; admins cannot change admin accounts or themselves |
@@ -125,6 +125,10 @@ Stored record fields:
 | `engineVersion` | circuit and verifier version, e.g. `age18-groth16-v1` | internal |
 
 `projectResult(result, role)` returns sanitized and measurement fields, flattened, for admin and operator; sanitized fields only for viewer; and throws for any other role. Exports use the admin/operator projection.
+
+## Report export
+
+Exports are downloads (`Content-Disposition: attachment`, `Cache-Control: no-store`) named `zk-access-report-YYYY-MM-DD.csv` or `.json`. Both formats carry the sanitized and measurement fields only, in the order of `EXPORT_COLUMNS` in `src/app/result-handlers.mjs`; internal fields never appear. JSON is `{ generatedAt, filters, columns, results }`. CSV has a header row and CRLF line endings; any cell starting with `=`, `+`, `-`, `@`, tab, or carriage return gets a leading `'` so spreadsheet programs do not run it as a formula. Every export writes `report.exported` with the format and row count. Unknown or repeated query parameters return `MALFORMED_INPUT`.
 
 ## Audit events
 
