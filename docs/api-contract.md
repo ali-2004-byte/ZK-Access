@@ -128,7 +128,7 @@ Stored record fields:
 
 ## Audit events
 
-Each service writes to its own append-only audit table. Rows are never updated; only the scheduled retention purge deletes them, and the purge writes its own `retention.purged` event. `src/contracts/audit-event.mjs` builds events.
+Each service writes to its own append-only audit table. Rows are never updated; only the scheduled retention purge deletes them, and the purge writes its own `retention.purged` event. A trigger rejects every update, and a second trigger rejects any delete unless the purge's transaction has inserted a guard row and the event is older than the 90-day cutoff. Both services run the purge at startup and then hourly (`src/db/retention.mjs`): results 90 days after verification, audit events 90 days after the event, challenges seven days after expiry, issuer records 90 days after credential expiry, and expired sessions. `src/contracts/audit-event.mjs` builds events.
 
 | Field | Content |
 | --- | --- |
