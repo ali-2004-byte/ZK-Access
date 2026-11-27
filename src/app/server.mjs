@@ -17,6 +17,7 @@ import { APP_ENDPOINTS } from './endpoints.mjs';
 import { checkIssuerStatus } from './issuer-status-client.mjs';
 import { ENGINE_VERSION, verifyAgeProof } from './proof-engine.mjs';
 import { createResultHandlers } from './result-handlers.mjs';
+import { createRuleHandlers } from './rule-handlers.mjs';
 import { createVerificationHandlers } from './verification-handlers.mjs';
 
 // Build the app; with a database it gets sessions, challenges, and verification, and every seam stays injectable.
@@ -48,6 +49,7 @@ export function createApp({
       ...accounts.handlers,
       ...createAuditHandlers({ auditStore: accounts.auditStore, audit, now }),
       ...createChallengeHandlers(shared),
+      ...createRuleHandlers(shared),
       ...(trustedIssuerKey ? createVerificationHandlers({
         ...shared, trustedIssuerKey, checkStatus, verifyProof, engineVersion: ENGINE_VERSION,
       }) : {}),
