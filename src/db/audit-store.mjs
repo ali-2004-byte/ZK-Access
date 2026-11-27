@@ -18,6 +18,11 @@ export function initializeAuditSchema(db) {
   db.exec('CREATE INDEX IF NOT EXISTS audit_events_time ON audit_events (occurred_at_ms)');
   db.exec(`CREATE TRIGGER IF NOT EXISTS audit_events_append_only BEFORE UPDATE ON audit_events
     BEGIN SELECT RAISE(ABORT, 'audit events are append-only'); END`);
+  // The purge inserts a guard row holding its cutoff; deletes outside that window are refused.
+  db.exec('CREATE TABLE IF NOT EXISTS retention_guard (audit_cutoff_ms INTEGER NOT NULL) STRICT');
+  db.exec(`CREATE TRIGGER IF NOT EXISTS audit_events_retention_only BEFORE DELETE ON audit_events
+    WHEN NOT EXISTS (SELECT 1 FROM retention_guard WHERE OLD.occurred_at_ms < audit_cutoff_ms)
+    BEGIN SELECT RAISE(ABORT, 'audit events are deleted only by the retention purge'); END`);
 }
 
 // Convert a stored row back into the audit event shape.
