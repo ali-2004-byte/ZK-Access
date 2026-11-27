@@ -1,6 +1,6 @@
 // Operator challenge issuance: session- and credential-bound, rate limited, with the cutoff fixed at issue time.
 import { randomBytes } from 'node:crypto';
-import { age18CutoffForUtcDate, currentUtcDate } from '../age-policy.mjs';
+import { ageCutoffForUtcDate, currentUtcDate } from '../age-policy.mjs';
 import { createAuditEvent } from '../contracts/audit-event.mjs';
 import { sendApiError } from '../contracts/error-codes.mjs';
 import { hasExactKeys, strictJsonBody } from '../http/json-body.mjs';
@@ -38,7 +38,7 @@ export function createChallengeHandlers({ records, sessions, audit, now = Date.n
       accountId: session.accountId,
       credentialId: body.credentialId,
       challengeHash: createChallengeHash(),
-      cutoff: Number(age18CutoffForUtcDate(currentUtcDate(new Date(time))).replaceAll('-', '')),
+      cutoff: Number(ageCutoffForUtcDate(currentUtcDate(new Date(time)), rule.minimumAge).replaceAll('-', '')),
       ruleName: rule.name,
       ruleVersion: rule.version,
       issuedAt: time,

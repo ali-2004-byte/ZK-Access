@@ -9,9 +9,15 @@ export function initializeAppRecordSchema(db) {
     name TEXT PRIMARY KEY,
     version INTEGER NOT NULL CHECK (version >= 1),
     challenge_lifetime_seconds INTEGER NOT NULL CHECK (challenge_lifetime_seconds BETWEEN 30 AND 1800),
-    updated_at_ms INTEGER NOT NULL
+    updated_at_ms INTEGER NOT NULL,
+    minimum_age INTEGER NOT NULL DEFAULT 18 CHECK (minimum_age BETWEEN 1 AND 120)
   ) STRICT`);
-  db.exec("INSERT OR IGNORE INTO rules VALUES ('age-at-least-18', 1, 300, 0)");
+  const columns = db.prepare('PRAGMA table_info(rules)').all().map((column) => column.name);
+  if (!columns.includes('minimum_age')) {
+    db.exec('ALTER TABLE rules ADD COLUMN minimum_age INTEGER NOT NULL DEFAULT 18 CHECK (minimum_age BETWEEN 1 AND 120)');
+  }
+  db.exec(`INSERT OR IGNORE INTO rules (name, version, challenge_lifetime_seconds, updated_at_ms, minimum_age)
+    VALUES ('age-at-least-18', 1, 300, 0, 18)`);
   db.exec(`CREATE TABLE IF NOT EXISTS challenges (
     challenge_id TEXT PRIMARY KEY,
     session_id_hash TEXT NOT NULL,
@@ -86,7 +92,10 @@ function filteredResults(db, { decision, reasonCode, from, to } = {}, limit = 50
 
 // Prepared statements for the challenge lifecycle and result history.
 export function createAppRecords(db) {
-  const rule = db.prepare('SELECT name, version, challenge_lifetime_seconds FROM rules ORDER BY name LIMIT 1');
+  const rule = db.prepare(`SELECT name, version, challenge_lifetime_seconds, minimum_age, updated_at_ms
+    FROM rules ORDER BY name LIMIT 1`);
+  const updateRule = db.prepare(`UPDATE rules SET version = version + 1, minimum_age = ?, challenge_lifetime_seconds = ?,
+    updated_at_ms = ? WHERE name = ? AND version = ?`);
   const insertChallenge = db.prepare(`INSERT INTO challenges (challenge_id, session_id_hash, account_id, credential_id,
     challenge_hash, cutoff, rule_name, rule_version, issued_at_ms, expires_at_ms, state)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'issued')`);
@@ -100,9 +109,22 @@ export function createAppRecords(db) {
   const getResult = db.prepare(`SELECT ${RESULT_COLUMNS} FROM verification_results WHERE result_id = ?`);
 
   return {
+    // The public rule name follows the configured age; the row key stays fixed.
     activeRule() {
       const row = rule.get();
-      return { name: row.name, version: row.version, challengeLifetimeMs: row.challenge_lifetime_seconds * 1000 };
+      return {
+        key: row.name,
+        name: `age-at-least-${row.minimum_age}`,
+        version: row.version,
+        minimumAge: row.minimum_age,
+        challengeLifetimeSeconds: row.challenge_lifetime_seconds,
+        challengeLifetimeMs: row.challenge_lifetime_seconds * 1000,
+        updatedAt: row.updated_at_ms,
+      };
+    },
+    // Compare-and-set on the version so two concurrent edits cannot both apply.
+    updateRule(current, { minimumAge, challengeLifetimeSeconds }, updatedAt) {
+      return updateRule.run(minimumAge, challengeLifetimeSeconds, updatedAt, current.key, current.version).changes === 1;
     },
     countRecentChallenges(accountId, sinceMs) {
       return recentChallenges.get(accountId, sinceMs).n;
