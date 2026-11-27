@@ -32,14 +32,14 @@ Sessions use the `zk_app_session` cookie in the app and `zk_issuer_session` in t
 | `GET /api/results` | `view_results` | none; query filters `decision`, `reasonCode`, `from`, `to` (Unix ms, inclusive); newest first, at most 500 |
 | `GET /api/results/:resultId` | `view_results` | none |
 | `GET /api/reports/export` | `export_report` | none; query `format=csv` or `format=json` (default), plus the result filters; at most 10,000 rows |
-| `GET /api/rules` | `configure_rules` | none |
-| `PUT /api/rules` | `configure_rules` | `{ "minimumAge": integer, "challengeLifetimeSeconds": integer, "confirm": boolean }` |
+| `GET /api/rules` | `configure_rules` | none; returns `{ ruleName, ruleVersion, minimumAge, challengeLifetimeSeconds, updatedAt }` |
+| `PUT /api/rules` | `configure_rules` | `{ "minimumAge": 13–25, "challengeLifetimeSeconds": 60–900, "confirm": boolean }`; returns the new rule |
 | `GET /api/audit-events` | `review_audit` | none; query `type`, `from`, `to`, `limit` (1–500, default 100) |
 | `GET /api/users` | `manage_users` | none |
 | `POST /api/users` | `manage_users` | `{ "username": string, "password": string, "role": "operator" \| "viewer" }` |
 | `PATCH /api/users/:accountId` | `manage_users` | `{ "role"?: "operator" \| "viewer", "disabled"?: boolean }`; admins cannot change admin accounts or themselves |
 
-High-impact rule changes (a lower minimum age or a longer challenge lifetime) without `"confirm": true` return `CONFIRMATION_REQUIRED` and change nothing.
+High-impact rule changes (a lower minimum age or a longer challenge lifetime) without `"confirm": true` return `CONFIRMATION_REQUIRED`, change nothing, and are audited as a denied `rules.changed`. Each applied change increments `ruleVersion`, renames the rule to `age-at-least-<minimumAge>`, and writes `rules.changed` with the new and previous versions and the new values. Sending the current values is a no-op. Two concurrent edits cannot both apply: the loser gets `CONFLICT`. A change affects only challenges issued afterwards; an issued challenge keeps its stored cutoff and rule version, so results remain reproducible.
 
 The proof measurements are carried outside the signed and proven material because the browser reports them. `POST /api/verifications` therefore accepts one optional top-level field, `clientMeasurements: { "proofGenerationMs": integer }`. The parser in `src/app/verification-request.mjs` must be extended for it when the route is built (owner: A, reviewer: B). The server measures `proofSizeBytes`, `verificationMs`, and `decisionLatencyMs` itself.
 
