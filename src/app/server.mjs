@@ -2,6 +2,8 @@
 import express from 'express';
 import { pathToFileURL } from 'node:url';
 import { loadServiceConfig } from '../config/local-config.mjs';
+import { createAuditStore } from '../db/audit-store.mjs';
+import { startRetentionSchedule } from '../db/retention.mjs';
 import { openServiceDatabase } from '../db/service-database.mjs';
 import { createAccountServices } from '../http/account-services.mjs';
 import { createAuthorizer, noSession, writeAuditToStdout } from '../http/authorization.mjs';
@@ -69,7 +71,9 @@ export function createApp({
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const config = loadServiceConfig('app');
   const issuerOrigin = `http://127.0.0.1:${process.env.ISSUER_PORT ?? 3001}`;
-  listenLocal(createApp({ db: openServiceDatabase('app'), ...config, issuerOrigin }), {
+  const db = openServiceDatabase('app');
+  startRetentionSchedule({ db, service: 'app', audit: createAuditStore(db).append });
+  listenLocal(createApp({ db, ...config, issuerOrigin }), {
     portVariable: 'APP_PORT',
     defaultPort: 3000,
     serviceName: 'ZK Access app',

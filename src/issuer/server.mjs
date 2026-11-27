@@ -3,6 +3,8 @@ import express from 'express';
 import { pathToFileURL } from 'node:url';
 import { mayUseIssuerAction } from '../app/access-policy.mjs';
 import { loadServiceConfig } from '../config/local-config.mjs';
+import { createAuditStore } from '../db/audit-store.mjs';
+import { startRetentionSchedule } from '../db/retention.mjs';
 import { openServiceDatabase } from '../db/service-database.mjs';
 import { createAccountServices } from '../http/account-services.mjs';
 import { createAuthorizer, noSession, writeAuditToStdout } from '../http/authorization.mjs';
@@ -57,7 +59,9 @@ export function createIssuer({
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const config = loadServiceConfig('issuer');
-  listenLocal(createIssuer({ db: openServiceDatabase('issuer'), ...config }), {
+  const db = openServiceDatabase('issuer');
+  startRetentionSchedule({ db, service: 'issuer', audit: createAuditStore(db).append });
+  listenLocal(createIssuer({ db, ...config }), {
     portVariable: 'ISSUER_PORT',
     defaultPort: 3001,
     serviceName: 'ZK Access issuer',
