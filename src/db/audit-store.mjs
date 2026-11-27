@@ -44,15 +44,21 @@ function rowToEvent(row) {
 // Store events built by createAuditEvent and read them newest first.
 export function createAuditStore(db) {
   const insert = db.prepare(`INSERT INTO audit_events (${COLUMNS}) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
-  const recent = db.prepare(`SELECT ${COLUMNS} FROM audit_events ORDER BY occurred_at_ms DESC, rowid DESC LIMIT ?`);
   return {
     append(event) {
       insert.run(event.eventId, event.service, event.type, event.occurredAt, event.actor.kind,
         event.actor.accountId ?? null, event.actor.role ?? null, event.outcome, event.code,
         JSON.stringify(event.context));
     },
-    list({ limit = 100 } = {}) {
-      return recent.all(limit).map(rowToEvent);
+    list({ type, from, to, limit = 100 } = {}) {
+      const clauses = [];
+      const params = [];
+      if (type !== undefined) { clauses.push('type = ?'); params.push(type); }
+      if (from !== undefined) { clauses.push('occurred_at_ms >= ?'); params.push(from); }
+      if (to !== undefined) { clauses.push('occurred_at_ms <= ?'); params.push(to); }
+      const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+      return db.prepare(`SELECT ${COLUMNS} FROM audit_events ${where} ORDER BY occurred_at_ms DESC, rowid DESC LIMIT ?`)
+        .all(...params, limit).map(rowToEvent);
     },
   };
 }
