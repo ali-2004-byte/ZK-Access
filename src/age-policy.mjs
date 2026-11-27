@@ -5,8 +5,14 @@ import { daysInMonth, formatIsoDate, parseIsoDate } from './calendar-date.mjs';
  * A private birth date belongs in the browser witness, never in this function.
  */
 export function age18CutoffForUtcDate(challengeDate) {
+  return ageCutoffForUtcDate(challengeDate, 18);
+}
+
+// Same cutoff rule for an admin-configured minimum age; the circuit only compares against the cutoff.
+export function ageCutoffForUtcDate(challengeDate, minimumAge) {
+  if (!Number.isSafeInteger(minimumAge) || minimumAge < 1) throw new RangeError('Minimum age must be a positive integer');
   const { year, month, day } = parseIsoDate(challengeDate);
-  const cutoffYear = year - 18;
+  const cutoffYear = year - minimumAge;
   if (cutoffYear < 1) throw new RangeError('Challenge date precedes supported cutoff');
 
   // Feb 29 in a leap challenge year has no Feb 29 eighteen years earlier.
