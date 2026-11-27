@@ -62,7 +62,7 @@ export function createApp({
     response.json({ service: 'zk-access-app', status: 'ok' });
   });
   const requireAction = createAuthorizer({ service: 'app', mayUse: mayUseAppAction, resolveSession, audit, now });
-  const resultHandlers = resultStore ? createResultHandlers(resultStore) : {};
+  const resultHandlers = resultStore ? createResultHandlers({ resultStore, audit, now }) : {};
   mountEndpoints(app, APP_ENDPOINTS, { requireAction, handlers: { ...defaults, ...resultHandlers, ...handlers } });
   mountFallbacks(app);
   return app;
