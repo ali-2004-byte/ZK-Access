@@ -6,15 +6,15 @@ Use synthetic dates and mock credentials only. This matrix records expected beha
 
 The server computes the age-18 cutoff from the current UTC date when it issues the challenge and stores the cutoff in that challenge row. The circuit must prove that the issuer-attested private birth date meets the stored cutoff. The expected results below assume a valid issuer credential and an unused, unexpired challenge. The server clock must be injectable for fixed-date tests.
 
-| Case | Synthetic birth date | Challenge issue date (UTC) | Expected decision | Reason |
-| --- | --- | --- | --- | --- |
-| AGE-01 | 2008-11-09 | 2026-11-09 | Allow | Exactly 18th birthday. |
-| AGE-02 | 2008-11-10 | 2026-11-09 | Deny | One day before 18th birthday. |
-| AGE-03 | 2008-11-08 | 2026-11-09 | Allow | One day after 18th birthday. |
-| AGE-04 | 2008-02-29 | 2026-02-28 | Deny | Feb 29 birthday is observed Mar 1 in a non-leap year. |
-| AGE-05 | 2008-02-29 | 2026-03-01 | Allow | Observed 18th birthday. |
-| AGE-06 | 2006-02-28 | 2024-02-29 | Allow | On a leap-day challenge issue date, the cutoff is Feb 28 in the year 18 years earlier. |
-| AGE-07 | 2006-03-01 | 2024-02-29 | Deny | One day after that cutoff. |
+| Case | Synthetic birth date | Challenge issue date (UTC) | Expected decision | Actual result | Evidence | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| AGE-01 | 2008-11-09 | 2026-11-09 | Allow | Proof generated and verified (`true`) | `test/age18-truth-table.test.mjs`, `test/age-policy.test.mjs` | Pass |
+| AGE-02 | 2008-11-10 | 2026-11-09 | Deny | Witness generation rejected (line 27 `LessEqThan`) | `test/age18-truth-table.test.mjs`, `scripts/zk-check.mjs` | Pass |
+| AGE-03 | 2008-11-08 | 2026-11-09 | Allow | Proof generated and verified (`true`) | `test/age18-truth-table.test.mjs` | Pass |
+| AGE-04 | 2008-02-29 | 2026-02-28 | Deny | Witness generation rejected (line 27 `LessEqThan`) | `test/age18-truth-table.test.mjs`, `test/age-policy.test.mjs` | Pass |
+| AGE-05 | 2008-02-29 | 2026-03-01 | Allow | Proof generated and verified (`true`) | `test/age18-truth-table.test.mjs`, `test/age-policy.test.mjs` | Pass |
+| AGE-06 | 2006-02-28 | 2024-02-29 | Allow | Proof generated and verified (`true`) | `test/age18-truth-table.test.mjs`, `test/age-policy.test.mjs` | Pass |
+| AGE-07 | 2006-03-01 | 2024-02-29 | Deny | Witness generation rejected (line 27 `LessEqThan`) | `test/age18-truth-table.test.mjs` | Pass |
 
 Tests should also reject impossible dates, malformed encodings, out-of-range field values, and a witness that opens a different commitment. Exact API error codes remain an interface decision; a failed signature/proof verification consumes its challenge under the agreed rule below.
 
@@ -61,7 +61,7 @@ The challenge lifetime defaults to five minutes from the rules table. Signature 
 
 ## Performance and security evidence (T3, T4, T-final)
 
-- Record proof size, proof generation time, verifier time, and end-to-end decision latency with the exact laptop environment, number of runs, and measurement method.
+- Record proof size, proof generation time, verifier time, and end-to-end decision latency with the exact laptop environment, number of runs, and measurement method. (T3 proof size, proof generation time, and verification time are recorded in [performance.md](performance.md) and [zk-benchmark-results.json](benchmarks/zk-benchmark-results.json) via `npm run zk:bench -- --write`.)
 - Map at least eight concrete threats to mitigations and test or review evidence. Include forged issuer data, arbitrary witness values, proof substitution, replay/race, unauthorized access, secret exposure, malformed/oversized input, and audit tampering as candidate threats.
 - Exercise safe errors, unauthorized access, restart recovery, sanitized export, and administrator rule changes.
 - Check every verifier response and admin/operator export against the agreed allowed-field list in the implementation plan. Exports include a fixed-enum reason code and proof size/timing measurements. Viewer results omit timings, and viewer export is denied with generic `AUTH_DENIED` and a redacted audit event.
