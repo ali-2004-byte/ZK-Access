@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import { generateKeyPairSync, randomBytes } from 'node:crypto';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { groth16 } from 'snarkjs';
 import { checkIssuerStatus } from '../src/app/issuer-status-client.mjs';
 import { closeProofEngine } from '../src/app/proof-engine.mjs';
@@ -19,8 +20,8 @@ const { privateKey: signingKey, publicKey: trustedIssuerKey } = generateKeyPairS
 const PASSWORD = 'synthetic-demo-password';
 const BIRTH_DATE = '2008-11-09';
 const SALT = '123456789';
-const WASM = new URL('../zk/artifacts/age18.wasm', import.meta.url).pathname;
-const ZKEY = new URL('../zk/artifacts/age18_final.zkey', import.meta.url).pathname;
+const WASM = fileURLToPath(new URL('../zk/artifacts/age18.wasm', import.meta.url));
+const ZKEY = fileURLToPath(new URL('../zk/artifacts/age18_final.zkey', import.meta.url));
 const DUMMY_PROOF = {
   pi_a: ['1', '2', '1'], pi_b: [['3', '4'], ['5', '6'], ['1', '0']], pi_c: ['7', '8', '1'],
   protocol: 'groth16', curve: 'bn128',

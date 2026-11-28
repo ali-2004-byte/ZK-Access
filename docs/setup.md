@@ -18,7 +18,7 @@ This repository currently has two Express entry points, the UTC age policy, issu
 7. In another terminal, run `npm run start:issuer`.
 8. Check `http://127.0.0.1:3000/health` and `http://127.0.0.1:3001/health`.
 
-The services bind to loopback only. Set `APP_PORT` or `ISSUER_PORT` if those ports are occupied. The issuer and app must remain separate processes; the issuer's signing key and administrator login will be added to the issuer process only.
+The services bind to loopback only. Set `APP_PORT` or `ISSUER_PORT` if those ports are occupied. The issuer and app run as separate processes with separate SQLite files, and only the issuer process loads the signing key and issuer-admin accounts.
 
 ## Contributor entry points
 
