@@ -50,10 +50,12 @@ async function submitRetry(submission, csrfToken) {
 }
 
 async function initOperator(session) {
-  const state = { credential: null, artifactsPromise: null, retrySubmission: null };
+  const state = { credential: null, artifactsPromise: null, retrySubmission: null, lastCompletedSubmission: null };
   const summary = byId('credential-summary');
   const prove = byId('prove-submit');
   const retry = byId('retry-submit');
+  const replayPanel = byId('replay-panel');
+  const replay = byId('replay-submit');
   const fileInput = byId('credential-file');
   const textInput = byId('credential-json');
 
@@ -62,12 +64,18 @@ async function initOperator(session) {
       const credential = parsePrivateCredentialJson(text);
       state.credential = credential;
       state.retrySubmission = null;
+      state.lastCompletedSubmission = null;
       retry.hidden = true;
+      replayPanel.hidden = true;
       setNotice(summary, `Imported credential ${credential.credentialId} from ${credential.issuerName}. Private values remain in this browser session.`);
       prove.disabled = false;
       return true;
     } catch {
       state.credential = null;
+      state.retrySubmission = null;
+      state.lastCompletedSubmission = null;
+      retry.hidden = true;
+      replayPanel.hidden = true;
       prove.disabled = true;
       setNotice(summary, 'Invalid private credential. Check the nine-field JSON format, calendar date, and 4 KB limit.', 'error');
       return false;
@@ -78,13 +86,18 @@ async function initOperator(session) {
     const file = fileInput.files?.[0];
     if (!file) return;
     if (file.size > 4096) {
-      state.credential = null; prove.disabled = true;
+      state.credential = null; state.retrySubmission = null; state.lastCompletedSubmission = null;
+      retry.hidden = true; replayPanel.hidden = true; prove.disabled = true;
       setNotice(summary, 'Credential file exceeds the 4 KB limit.', 'error');
       fileInput.value = '';
       return;
     }
     try { importText(await file.text()); textInput.value = ''; }
-    catch { state.credential = null; prove.disabled = true; setNotice(summary, 'Could not read the credential file.', 'error'); }
+    catch {
+      state.credential = null; state.retrySubmission = null; state.lastCompletedSubmission = null;
+      retry.hidden = true; replayPanel.hidden = true; prove.disabled = true;
+      setNotice(summary, 'Could not read the credential file.', 'error');
+    }
     finally { fileInput.value = ''; }
   });
   byId('import-text').addEventListener('click', () => { if (importText(textInput.value)) textInput.value = ''; });
@@ -94,6 +107,8 @@ async function initOperator(session) {
     prove.disabled = true;
     retry.hidden = true;
     state.retrySubmission = null;
+    state.lastCompletedSubmission = null;
+    replayPanel.hidden = true;
     setNotice(byId('outcome-box'), 'Loading proof artifacts and generating the proof…');
     try {
       state.artifactsPromise ??= loadVerifiedArtifacts();
@@ -105,6 +120,10 @@ async function initOperator(session) {
         encodeBirthDateNumber: birthDateNumberForProof, artifacts,
       });
       displayOutcome(run.outcome, run.responseBody);
+      if (run.outcome.reasonCode === 'PROOF_VALID' && run.submission) {
+        state.lastCompletedSubmission = run.submission;
+        replayPanel.hidden = false;
+      }
       if (run.outcome.reasonCode === 'ISSUER_UNAVAILABLE' && run.submission) {
         state.retrySubmission = run.submission;
         retry.hidden = false;
@@ -121,6 +140,10 @@ async function initOperator(session) {
     try {
       const response = await submitRetry(state.retrySubmission, session.csrfToken);
       displayOutcome(response.outcome, response.body);
+      if (response.outcome.reasonCode === 'PROOF_VALID') {
+        state.lastCompletedSubmission = state.retrySubmission;
+        replayPanel.hidden = false;
+      }
       if (response.outcome.reasonCode !== 'ISSUER_UNAVAILABLE') {
         state.retrySubmission = null;
         retry.hidden = true;
@@ -128,6 +151,21 @@ async function initOperator(session) {
       await loadResults('operator');
     } catch { setNotice(byId('outcome-box'), 'Could not retry verification. Check the service connection.', 'error'); }
     finally { retry.disabled = false; }
+  });
+
+  replay.addEventListener('click', async () => {
+    if (!state.lastCompletedSubmission) return;
+    replay.disabled = true;
+    try {
+      const response = await submitRetry(state.lastCompletedSubmission, session.csrfToken);
+      displayOutcome(response.outcome, response.body);
+      if (response.outcome.reasonCode === 'CHALLENGE_REPLAYED') {
+        state.lastCompletedSubmission = null;
+        replayPanel.hidden = true;
+      }
+      await loadResults('operator');
+    } catch { setNotice(byId('outcome-box'), 'Could not run the replay check. Check the service connection.', 'error'); }
+    finally { replay.disabled = false; }
   });
 }
 
