@@ -1,6 +1,6 @@
 # Local development setup
 
-This repository currently has two Express entry points, the UTC age policy, issuer calendar-date encoding, shared Ed25519 credential-signing bytes, strict private/public request parsers, an injectable issuer-status client/router, server-side role rules, session lifetime rules, the Circom age circuit and Groth16 artifacts, and planning/test documents. Both processes open their own SQLite file under `.local/`, support login, cookie sessions, CSRF-protected writes, user management, and an append-only audit log. The issuer issues and revokes signed credentials and serves the authenticated status route; the app issues challenges and verifies submitted proofs. Browser screens and proof generation are not built yet.
+This repository has two Express services, the UTC age policy, shared Ed25519 signing format, strict private/public request parsers, the Circom age circuit and Groth16 artifacts, and planning/test documents. Both processes open their own SQLite file under `.local/`, support login, cookie sessions, CSRF-protected writes, user management, and an append-only audit log. The issuer issues and revokes signed credentials and serves the authenticated status route; the app issues challenges and verifies submitted proofs. The app includes a basic operator browser page for credential import and proof generation; the issuer download page, result history, dashboard, and report screens remain to be built.
 
 ## Prerequisites
 
@@ -17,6 +17,7 @@ This repository currently has two Express entry points, the UTC age policy, issu
 6. In one terminal, run `npm run start:app`.
 7. In another terminal, run `npm run start:issuer`.
 8. Check `http://127.0.0.1:3000/health` and `http://127.0.0.1:3001/health`.
+9. Open `http://127.0.0.1:3000/` in a browser, sign in with an operator account, import a synthetic nine-field private credential JSON file, and run the in-browser Groth16 proof workflow. The browser fetches `/zk/age18.wasm`, `/zk/age18_final.zkey`, and `/zk/manifest.json`, verifies the SHA-256 hashes against the manifest, generates the proof locally in memory without sending `birthDate` or `salt`, and submits only public proof material with the session CSRF token.
 
 The services bind to loopback only. Set `APP_PORT` or `ISSUER_PORT` if those ports are occupied. The issuer and app run as separate processes with separate SQLite files, and only the issuer process loads the signing key and issuer-admin accounts.
 
