@@ -2,7 +2,7 @@
 
 This is an issue-ready breakdown of the [implementation plan](implementation-plan.md). Member labels follow the proposal; assign names when the team confirms them. The **State** column is a progress snapshot as of 2026-11-28: **complete** means the completion check is met, **partial** identifies work already in the repository, and **not started** identifies remaining work. A dependency listed in a state still needs resolution before that part is implemented.
 
-The repository has 94 passing automated tests after the Member B merge. Member A's server work is in place: both services have login, sessions, and role-checked routes; the issuer issues and revokes credentials; the app verifies proofs, configures rules, exports sanitized reports, and purges on the D9 schedule. Member B added browser proof code, artifact serving and checks, edge fixtures, and measured benchmark results. Member C still needs the issuer download page, complete operator workflow, result history, dashboard, export screens, and demo integration.
+The repository has 95 passing automated tests. Member A's server work is in place: both services have login, sessions, and role-checked routes; the issuer issues and revokes credentials; the app verifies proofs, configures rules, exports sanitized reports, and purges on the D9 schedule. Member B added browser proof code, artifact serving and checks, edge fixtures, and measured benchmark results. Member C has a draft of the role-specific browser pages and issuer handoff; the complete browser journey and demo evidence still need validation.
 
 ## Shared contract review
 
@@ -35,9 +35,9 @@ The proof must be connected to an issuer attestation and a one-time request. A c
 
 | Task | State | Completion check |
 | --- | --- | --- |
-| C1. Wireframe credential setup, proof request, result, history, and dashboard. | **Not started.** | Normal, adverse, denied, and failure states have clear explanations without displaying the birth date to the verifier. |
-| C2. Build validated browser input and proof-generation flow in plain JavaScript. | **Partial:** the operator page imports private JSON and invokes Member B's browser prover; the issuer-admin download page, user guidance, and browser smoke test remain. | Issuer-admin browser downloads private credential JSON; operator imports it in the app browser, which handles the private birth date and salt and sends only agreed public proof material to verification. |
-| C3. Build dashboard, filters, evidence view, and sanitized export UI. | **Not started:** result and export APIs are available; the screens and B/C contract review remain. | Status, safe reason code, evidence, recommended action, history, proof size, and timing are legible for admin/operator; viewer sees sanitized results without timings and cannot export. |
+| C1. Wireframe credential setup, proof request, result, history, and dashboard. | **Complete as a draft:** [browser wireframes](browser-wireframes.md) map separate admin/operator/viewer pages and the issuer page, including normal, denied, expired, replayed, unavailable, and empty states. Visual and accessibility review remain part of C4. | Normal, adverse, denied, and failure states have clear explanations without displaying the birth date to the verifier. |
+| C2. Build validated browser input and proof-generation flow in plain JavaScript. | **Partial:** issuer page issues and downloads private JSON; operator page checks the 4 KB file limit before reading, imports it in memory, calls Member B's browser prover, and can retry an issuer-outage challenge. A full signed-in browser rehearsal remains. | Issuer-admin browser downloads private credential JSON; operator imports it in the app browser, which handles the private birth date and salt and sends only agreed public proof material to verification. |
+| C3. Build dashboard, filters, evidence view, and sanitized export UI. | **Partial:** role pages render safe result history, decision charts, details, and admin/operator exports; admin forms cover rules, users, and audit. API-backed browser and accessibility validation remain. | Status, safe reason code, evidence, recommended action, history, proof size, and timing are legible for admin/operator; viewer sees sanitized results without timings and cannot export. |
 | C4. Integrate the 10-15 minute demo journey. | **Not started:** depends on A4, B3, and C3. | Valid, invalid, replay, unauthorized, rule-change, and export examples are reproducible. |
 
 ## Member D: security, automation, QA, packaging
@@ -46,15 +46,15 @@ The proof must be connected to an issuer attestation and a one-time request. A c
 | --- | --- | --- |
 | D1. Review and complete the draft data-flow diagram and threat-model worksheet. | **Partial:** diagram and eleven-threat draft exist; instructor-scope approval and team review remain. | [Threat model](threat-model.md) lists eleven concrete threats with boundary, mitigation, and implementation/evidence status; team validates against final design and instructor scope. |
 | D2. Create the test matrix for T1-T4 and T-final. | **Partial:** expected cases are documented; actual results, evidence locations, and pass/fail entries remain. | Every case records input description, expected result, actual result, evidence, and pass/fail. |
-| D3. Add repeatable automated security and misuse tests. | **Complete for the server workflow:** 94 passing tests cover the listed HTTP authorization, malformed input, signature/proof, replay, concurrent use, issuer outage/revocation, retention, and restart-recovery cases. Browser journey testing remains part of C4 and final evidence. | Covers role-denial audit with generic `AUTH_DENIED`, unauthorized access, malformed/oversized input, repeated submission/replay, concurrent challenge use, early rejection without consumption, invalid signature/proof and definitive issuer denial with consumption, issuer outage without consumption, revocation, and recovery after restart. |
+| D3. Add repeatable automated security and misuse tests. | **Complete for the server workflow:** 95 passing tests cover the listed HTTP authorization, malformed input, signature/proof, replay, concurrent use, issuer outage/revocation, retention, and restart-recovery cases. Browser journey testing remains part of C4 and final evidence. | Covers role-denial audit with generic `AUTH_DENIED`, unauthorized access, malformed/oversized input, repeated submission/replay, concurrent challenge use, early rejection without consumption, invalid signature/proof and definitive issuer denial with consumption, issuer outage without consumption, revocation, and recovery after restart. |
 | D4. Package local setup, sanitized fixtures, and clean-install rehearsal. | **Partial:** setup guide, scripts, and synthetic fixtures exist; teammate clean-install and restart rehearsal remain. | A teammate can follow the guide from a clean checkout on an ordinary laptop. |
 | D5. Check final evidence gate. | **Not started:** requires integrated workflow and final test evidence. | At least 80% of automated tests pass and no critical authorization, injection, secret-exposure, or unsafe-file-handling defect remains unresolved. |
 
 ## Current dependency order
 
 1. Done: A1, A3-A5 server work and B1-B4 proof work. C still needs to review A2's result and UI contract.
-2. Complete C1/C2 by designing the screens, adding the issuer download flow, and smoke-testing the browser proof journey.
-3. Build C3 result history, dashboard, evidence, and export screens, then C4's 10-15 minute demo journey.
+2. Complete C2/C3 with a signed-in browser rehearsal of issuance, proof generation, role-specific results, and export.
+3. Integrate and rehearse C4's 10-15 minute demo journey, including adverse cases and the admin rule change.
 4. Complete D1/D2/D4 review, evidence, and clean-install rehearsal; test the browser journey before D5.
 
 ## Pull request handoff checklist

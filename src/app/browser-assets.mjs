@@ -12,7 +12,12 @@ const SNARKJS_MIN = path.join(path.dirname(fileURLToPath(import.meta.resolve('sn
 
 const STATIC_ROUTES = Object.freeze([
   ['/', path.join(PUBLIC_DIR, 'index.html'), 'text/html; charset=utf-8'],
+  ['/operator', path.join(PUBLIC_DIR, 'operator.html'), 'text/html; charset=utf-8'],
+  ['/admin', path.join(PUBLIC_DIR, 'admin.html'), 'text/html; charset=utf-8'],
+  ['/viewer', path.join(PUBLIC_DIR, 'viewer.html'), 'text/html; charset=utf-8'],
+  ['/styles.css', path.join(PUBLIC_DIR, 'styles.css'), 'text/css; charset=utf-8'],
   ['/app.js', path.join(PUBLIC_DIR, 'app.js'), 'text/javascript; charset=utf-8'],
+  ['/ui-common.mjs', path.join(PUBLIC_DIR, 'ui-common.mjs'), 'text/javascript; charset=utf-8'],
   ['/prover-client.mjs', path.join(PUBLIC_DIR, 'prover-client.mjs'), 'text/javascript; charset=utf-8'],
   ['/vendor/snarkjs.min.js', SNARKJS_MIN, 'text/javascript; charset=utf-8'],
   ['/shared/credential-json.mjs', path.join(SHARED_DIR, 'credential-json.mjs'), 'text/javascript; charset=utf-8'],

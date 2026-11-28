@@ -1,6 +1,6 @@
 # Local development setup
 
-This repository has two Express services, the UTC age policy, shared Ed25519 signing format, strict private/public request parsers, the Circom age circuit and Groth16 artifacts, and planning/test documents. Both processes open their own SQLite file under `.local/`, support login, cookie sessions, CSRF-protected writes, user management, and an append-only audit log. The issuer issues and revokes signed credentials and serves the authenticated status route; the app issues challenges and verifies submitted proofs. The app includes a basic operator browser page for credential import and proof generation; the issuer download page, result history, dashboard, and report screens remain to be built.
+This repository has two Express services, the UTC age policy, shared Ed25519 signing format, strict private/public request parsers, the Circom age circuit and Groth16 artifacts, and planning/test documents. Both processes open their own SQLite file under `.local/`, support login, cookie sessions, CSRF-protected writes, user management, and an append-only audit log. The issuer issues and revokes signed credentials and serves the authenticated status route; the app issues challenges and verifies submitted proofs. Browser pages now cover issuance, private credential import, proof generation, role-specific result views, rules, audit review, and exports. The complete browser journey still needs a live rehearsal.
 
 ## Prerequisites
 
@@ -17,7 +17,8 @@ This repository has two Express services, the UTC age policy, shared Ed25519 sig
 6. In one terminal, run `npm run start:app`.
 7. In another terminal, run `npm run start:issuer`.
 8. Check `http://127.0.0.1:3000/health` and `http://127.0.0.1:3001/health`.
-9. Open `http://127.0.0.1:3000/` in a browser, sign in with an operator account, import a synthetic nine-field private credential JSON file, and run the in-browser Groth16 proof workflow. The browser fetches `/zk/age18.wasm`, `/zk/age18_final.zkey`, and `/zk/manifest.json`, verifies the SHA-256 hashes against the manifest, generates the proof locally in memory without sending `birthDate` or `salt`, and submits only public proof material with the session CSRF token.
+9. Open `http://127.0.0.1:3001/`, sign in as issuer admin, issue a synthetic credential, and download its private JSON file.
+10. Open `http://127.0.0.1:3000/`, sign in as an operator, import the private JSON file, and run the in-browser Groth16 proof workflow. The browser checks the artifact hashes, generates the proof locally without sending `birthDate` or `salt` to the app, and submits only public proof material with the session CSRF token. App admin and viewer accounts go to their own role pages after sign-in.
 
 The services bind to loopback only. Set `APP_PORT` or `ISSUER_PORT` if those ports are occupied. The issuer and app run as separate processes with separate SQLite files, and only the issuer process loads the signing key and issuer-admin accounts.
 

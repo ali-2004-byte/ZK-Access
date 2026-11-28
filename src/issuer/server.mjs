@@ -11,6 +11,7 @@ import { createAuthorizer, noSession, writeAuditToStdout } from '../http/authori
 import { mountEndpoints, mountFallbacks } from '../http/endpoints.mjs';
 import { listenLocal } from '../listen-local.mjs';
 import { createIssuerRecords } from '../db/issuer-records.mjs';
+import { createIssuerBrowserAssetRouter } from './browser-assets.mjs';
 import { ISSUER_ENDPOINTS } from './endpoints.mjs';
 import { createIssuanceHandlers } from './issuance-handlers.mjs';
 import { createIssuerStatusRouter } from './status-router.mjs';
@@ -45,6 +46,7 @@ export function createIssuer({
   app.get('/health', (_request, response) => {
     response.json({ service: 'zk-access-issuer', status: 'ok' });
   });
+  app.use(createIssuerBrowserAssetRouter());
   if (records && serviceToken) {
     app.use(createIssuerStatusRouter({
       serviceToken,
