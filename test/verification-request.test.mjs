@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { parseVerificationRequest, publicSignalsMatchChallenge } from '../src/app/verification-request.mjs';
+import { BN254_FIELD_MODULUS } from '../src/zk/field.mjs';
 import { requestTag } from '../src/zk/poseidon.mjs';
 
 const credential = {
@@ -57,4 +58,45 @@ test('missing, extra, wrongly typed, and oversized request bodies are rejected',
   assert.throws(() => parseVerificationRequest(JSON.stringify({ ...submission, publicSignals: ['1', '2', '3'] })));
   assert.throws(() => parseVerificationRequest(JSON.stringify({ ...submission, publicSignals: ['1', '2', 3, '4'] })));
   assert.throws(() => parseVerificationRequest(JSON.stringify(submission) + ' '.repeat(16 * 1024)));
+});
+
+test('public signal bounds and optional clientMeasurements are strictly validated', () => {
+  const withTiming = { ...submission, clientMeasurements: { proofGenerationMs: 1234 } };
+  assert.equal(parseVerificationRequest(JSON.stringify(withTiming)).clientMeasurements.proofGenerationMs, 1234);
+
+  for (const badTiming of [
+    { proofGenerationMs: -1 },
+    { proofGenerationMs: 12.5 },
+    { proofGenerationMs: 600_001 },
+    { proofGenerationMs: 100, extra: 1 },
+    {},
+  ]) {
+    assert.throws(() => parseVerificationRequest(JSON.stringify({ ...submission, clientMeasurements: badTiming })));
+  }
+
+  assert.throws(
+    () => parseVerificationRequest(JSON.stringify({
+      ...submission,
+      clientMeasurements: { proofGenerationMs: 100, birthDate: '2008-11-09' },
+    })),
+    /PRIVATE_FIELD_SUBMITTED/,
+  );
+
+  // Field/range bounds for [requestTag, commitment, cutoff, challengeHash]
+  assert.throws(() => parseVerificationRequest(JSON.stringify({
+    ...submission,
+    publicSignals: [BN254_FIELD_MODULUS.toString(), '123', '20081109', '7'],
+  })));
+  assert.throws(() => parseVerificationRequest(JSON.stringify({
+    ...submission,
+    publicSignals: [submission.publicSignals[0], BN254_FIELD_MODULUS.toString(), '20081109', '7'],
+  })));
+  assert.throws(() => parseVerificationRequest(JSON.stringify({
+    ...submission,
+    publicSignals: [submission.publicSignals[0], '123', String(1n << 32n), '7'],
+  })));
+  assert.throws(() => parseVerificationRequest(JSON.stringify({
+    ...submission,
+    publicSignals: [submission.publicSignals[0], '123', '20081109', String(1n << 248n)],
+  })));
 });
