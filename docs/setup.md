@@ -17,6 +17,7 @@ This repository currently has two Express entry points, the UTC age policy, issu
 6. In one terminal, run `npm run start:app`.
 7. In another terminal, run `npm run start:issuer`.
 8. Check `http://127.0.0.1:3000/health` and `http://127.0.0.1:3001/health`.
+9. Open `http://127.0.0.1:3000/` in a browser, sign in with an operator account, import a synthetic nine-field private credential JSON file, and run the in-browser Groth16 proof workflow. The browser fetches `/zk/age18.wasm`, `/zk/age18_final.zkey`, and `/zk/manifest.json`, verifies the SHA-256 hashes against the manifest, generates the proof locally in memory without sending `birthDate` or `salt`, and submits only public proof material with the session CSRF token.
 
 The services bind to loopback only. Set `APP_PORT` or `ISSUER_PORT` if those ports are occupied. The issuer and app must remain separate processes; the issuer's signing key and administrator login will be added to the issuer process only.
 

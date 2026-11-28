@@ -12,6 +12,7 @@ import { listenLocal } from '../listen-local.mjs';
 import { mayUseAppAction } from './access-policy.mjs';
 import { createAppRecords } from '../db/app-records.mjs';
 import { createAuditHandlers } from './audit-handlers.mjs';
+import { createBrowserAssetRouter } from './browser-assets.mjs';
 import { createChallengeHandlers } from './challenge-handlers.mjs';
 import { APP_ENDPOINTS } from './endpoints.mjs';
 import { checkIssuerStatus } from './issuer-status-client.mjs';
@@ -63,6 +64,7 @@ export function createApp({
   app.get('/health', (_request, response) => {
     response.json({ service: 'zk-access-app', status: 'ok' });
   });
+  app.use(createBrowserAssetRouter());
   const requireAction = createAuthorizer({ service: 'app', mayUse: mayUseAppAction, resolveSession, audit, now });
   const resultHandlers = resultStore ? createResultHandlers({ resultStore, audit, now }) : {};
   mountEndpoints(app, APP_ENDPOINTS, { requireAction, handlers: { ...defaults, ...resultHandlers, ...handlers } });
