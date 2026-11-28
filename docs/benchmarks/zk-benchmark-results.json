@@ -1,0 +1,117 @@
+{
+  "generatedAtUtc": "2026-11-28T07:36:14.446Z",
+  "engineVersion": "age18-groth16-v1",
+  "snarkjsVersion": "0.7.6",
+  "environment": {
+    "nodeVersion": "v24.18.0",
+    "platform": "win32",
+    "arch": "x64",
+    "cpuModel": "Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz",
+    "cpuCount": 8,
+    "totalMemoryMB": 32602
+  },
+  "methodology": {
+    "fixtureType": "synthetic",
+    "warmupRuns": 2,
+    "sampleCount": 10,
+    "singleThreadProver": true
+  },
+  "summary": {
+    "proofGenerationMs": {
+      "min": 611.38,
+      "median": 623.1,
+      "mean": 623.78,
+      "max": 636.67
+    },
+    "verificationMs": {
+      "min": 14.97,
+      "median": 21.1,
+      "mean": 20.52,
+      "max": 25.63
+    },
+    "proofSizeBytes": {
+      "min": 720,
+      "median": 723,
+      "mean": 723.2,
+      "max": 726
+    },
+    "publicSignalsSizeBytes": {
+      "min": 247,
+      "median": 249,
+      "mean": 248.9,
+      "max": 250
+    }
+  },
+  "samples": [
+    {
+      "sample": 1,
+      "proofGenerationMs": 620.47,
+      "verificationMs": 23.75,
+      "proofSizeBytes": 723,
+      "publicSignalsSizeBytes": 247
+    },
+    {
+      "sample": 2,
+      "proofGenerationMs": 627.71,
+      "verificationMs": 24.37,
+      "proofSizeBytes": 722,
+      "publicSignalsSizeBytes": 249
+    },
+    {
+      "sample": 3,
+      "proofGenerationMs": 622.62,
+      "verificationMs": 20.9,
+      "proofSizeBytes": 722,
+      "publicSignalsSizeBytes": 250
+    },
+    {
+      "sample": 4,
+      "proofGenerationMs": 636.67,
+      "verificationMs": 20.01,
+      "proofSizeBytes": 726,
+      "publicSignalsSizeBytes": 248
+    },
+    {
+      "sample": 5,
+      "proofGenerationMs": 627.5,
+      "verificationMs": 14.97,
+      "proofSizeBytes": 725,
+      "publicSignalsSizeBytes": 250
+    },
+    {
+      "sample": 6,
+      "proofGenerationMs": 620.17,
+      "verificationMs": 16.73,
+      "proofSizeBytes": 724,
+      "publicSignalsSizeBytes": 248
+    },
+    {
+      "sample": 7,
+      "proofGenerationMs": 622.25,
+      "verificationMs": 21.54,
+      "proofSizeBytes": 723,
+      "publicSignalsSizeBytes": 250
+    },
+    {
+      "sample": 8,
+      "proofGenerationMs": 625.43,
+      "verificationMs": 16.03,
+      "proofSizeBytes": 722,
+      "publicSignalsSizeBytes": 249
+    },
+    {
+      "sample": 9,
+      "proofGenerationMs": 611.38,
+      "verificationMs": 25.63,
+      "proofSizeBytes": 725,
+      "publicSignalsSizeBytes": 249
+    },
+    {
+      "sample": 10,
+      "proofGenerationMs": 623.58,
+      "verificationMs": 21.31,
+      "proofSizeBytes": 720,
+      "publicSignalsSizeBytes": 249
+    }
+  ]
+}

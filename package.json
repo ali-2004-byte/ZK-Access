@@ -8,6 +8,7 @@
     "start:issuer": "node src/issuer/server.mjs",
     "zk:setup": "node scripts/zk-setup.mjs",
     "zk:check": "node scripts/zk-check.mjs",
+    "zk:bench": "node scripts/zk-benchmark.mjs",
     "test": "node --test"
   },
   "dependencies": {
